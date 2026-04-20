@@ -1,0 +1,217 @@
+/* 1. Nhập phông chữ Inter chuyên nghiệp */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* 2. Thiết lập cơ bản (Base Styles) */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #0f172a; /* Nền tối sâu */
+  color: #f8fafc;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  /* Chống bounce/kéo trang trên iOS */
+  position: fixed; 
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 3. Lớp tiện ích (Utility Classes) */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ĐÃ TINH CHỈNH: Sửa lỗi background-clip cho mọi trình duyệt */
+.text-gradient {
+  background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+  -webkit-background-clip: text;
+  background-clip: text; /* Dòng này giúp hết lỗi vàng trong VS Code */
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+/* 4. Cấu trúc Layout App */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* 5. Tùy chỉnh thanh cuộn (Scrollbar) cho Dark Mode */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.4);
+}
+
+/* 6. Hiệu ứng chuyển cảnh (Page Transitions) */
+.page-transition {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(8px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* 7. Hiệu ứng quay cho Loading */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 8. Responsive cho thiết bị di động */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 15px;
+  }
+  
+  /* Ẩn chữ trên các nút logout/action để tiết kiệm diện tích */
+  .hide-mobile {
+    display: none;
+  }
+  
+  /* Responsive cho tables */
+  .responsive-table {
+    font-size: 12px;
+  }
+  
+  .responsive-table th,
+  .responsive-table td {
+    padding: 8px 4px;
+  }
+  
+  /* Responsive cho cards */
+  .responsive-card {
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  
+  .responsive-card h4 {
+    font-size: 14px;
+  }
+  
+  /* Responsive cho buttons */
+  .responsive-btn {
+    padding: 10px 12px;
+    font-size: 14px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Responsive cho forms */
+  .responsive-form input,
+  .responsive-form select,
+  .responsive-form textarea {
+    padding: 10px;
+    font-size: 16px; /* Ngăn zoom trên iOS */
+  }
+  
+  /* Responsive cho modal */
+  .responsive-modal {
+    width: 95%;
+    max-width: none;
+    margin: 10px;
+  }
+  
+  /* Responsive cho grid layouts */
+  .responsive-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .responsive-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  /* Responsive cho flex layouts */
+  .responsive-flex {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  /* Ẩn columns không cần thiết trên mobile */
+  .hide-on-mobile {
+    display: none;
+  }
+  
+  /* Responsive cho navigation */
+  .mobile-nav {
+    padding: 8px 0;
+  }
+  
+  .mobile-nav-item {
+    padding: 6px;
+  }
+  
+  .mobile-nav-item span:first-child {
+    font-size: 18px;
+  }
+  
+  .mobile-nav-item span:last-child {
+    font-size: 10px;
+  }
+}
+
+/* Responsive cho tablets */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .main-content {
+    padding: 20px;
+  }
+  
+  .responsive-table th,
+  .responsive-table td {
+    padding: 10px;
+  }
+  
+  .responsive-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
