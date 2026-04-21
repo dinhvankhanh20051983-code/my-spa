@@ -1592,6 +1592,7 @@ const OwnerDashboard = () => {
   // --- 6. GIAO DIỆN CHÍNH ---
   return (
     <div style={layoutStyle} className="responsive-layout">
+      <div style={{color: 'white', padding: '10px', backgroundColor: 'red'}}>Owner Dashboard Loaded</div>
       {/* SIDEBAR NAVIGATION */}
       <div style={sidebarStyle} className="responsive-sidebar">
         <h2 style={{color:'#10b981', textAlign:'center', marginBottom:'40px'}}>SPA MASTER</h2>
