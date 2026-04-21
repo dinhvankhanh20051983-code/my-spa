@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../../../lib/supabaseClient';
 
 export const ChatSection = ({
   chatType,
@@ -13,23 +14,53 @@ export const ChatSection = ({
   const [messageInput, setMessageInput] = useState('');
   const [messages, setMessages] = useState({});
 
-  const handleSendMessage = () => {
+  const loadChatMessages = async () => {
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (!error && data) {
+      const grouped = data.reduce((acc, msg) => {
+        const key = msg.target_phone || msg.chat_key || 'general';
+        acc[key] = acc[key] || [];
+        acc[key].push(msg);
+        return acc;
+      }, {});
+      setMessages(grouped);
+    }
+  };
+
+  useEffect(() => {
+    loadChatMessages();
+  }, []);
+
+  const handleSendMessage = async () => {
     if (!messageInput.trim() || !activeChat) return;
 
     const now = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
     const chatKey = activeChat.phone;
-    
-    if (!messages[chatKey]) {
-      messages[chatKey] = [];
-    }
+    const newMessage = {
+      chat_type: chatType,
+      sender: 'Bạn',
+      target_phone: activeChat.phone,
+      text: messageInput,
+      created_at: new Date().toISOString()
+    };
 
-    setMessages(prev => ({
-      ...prev,
-      [chatKey]: [
-        ...(prev[chatKey] || []),
-        { sender: 'Bạn', time: now, text: messageInput }
-      ]
-    }));
+    const { data, error } = await supabase.from('chat_messages').insert([newMessage]).select();
+    if (!error && data && data.length > 0) {
+      setMessages(prev => ({
+        ...prev,
+        [chatKey]: [...(prev[chatKey] || []), data[0]]
+      }));
+    } else {
+      setMessages(prev => ({
+        ...prev,
+        [chatKey]: [...(prev[chatKey] || []), { ...newMessage, time: now }]
+      }));
+      if (error) console.error('Supabase insert chat failed:', error);
+    }
 
     setMessageInput('');
   };
@@ -96,13 +127,24 @@ export const ChatSection = ({
                 Chat với: {activeChat.name}
               </div>
               <div style={styles.chatHistory}>
-                <div style={styles.msgLeft}>Chào Spa, tôi muốn hỏi về dịch vụ.</div>
-                <div style={styles.msgRight}>Chào {activeChat.name}, Spa có thể giúp gì cho bạn?</div>
-                {messages[activeChat.phone] && messages[activeChat.phone].map((msg, idx) => (
-                  <div key={idx} style={msg.sender === 'Bạn' ? styles.msgRight : styles.msgLeft}>
-                    {msg.text}
-                  </div>
-                ))}
+                {messages[activeChat.phone] && messages[activeChat.phone].length > 0 ? (
+                  messages[activeChat.phone].map((msg, idx) => {
+                    const timeLabel = msg.created_at ? new Date(msg.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : msg.time || '';
+                    return (
+                      <div key={idx} style={msg.sender === 'Bạn' ? styles.msgRight : styles.msgLeft}>
+                        <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
+                          <strong>{msg.sender}</strong> {timeLabel && `• ${timeLabel}`}
+                        </div>
+                        <div>{msg.text}</div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <>
+                    <div style={styles.msgLeft}>Chào Spa, tôi muốn hỏi về dịch vụ.</div>
+                    <div style={styles.msgRight}>Chào {activeChat.name}, Spa có thể giúp gì cho bạn?</div>
+                  </>
+                )}
               </div>
               <div style={styles.chatInputArea}>
                 <input 

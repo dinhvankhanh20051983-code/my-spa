@@ -1,3 +1,5 @@
+import { supabase } from '../../../lib/supabaseClient';
+
 /**
  * Appointment-related handlers
  */
@@ -9,10 +11,12 @@ export const useAppointmentHandlers = ({
   setCustomers
 }) => {
   // Update appointment status
-  const handleUpdateStatus = (id, newStatus) => {
+  const handleUpdateStatus = async (id, newStatus) => {
     setAppointments(prev => 
       prev.map(a => a.id === id ? { ...a, status: newStatus } : a)
     );
+    const { error } = await supabase.from('appointments').update({ status: newStatus }).eq('id', id);
+    if (error) console.error('Supabase update appointment status failed:', error);
   };
 
   // Send reminder notification
@@ -28,35 +32,43 @@ export const useAppointmentHandlers = ({
   };
 
   // Mark as complete and print invoice
-  const handleComplete = (item) => {
+  const handleComplete = async (item) => {
     setAppointments(prev => 
       prev.map(a => 
         a.id === item.id ? { ...a, status: 'Đã hoàn thành' } : a
       )
     );
+    const { error } = await supabase.from('appointments').update({ status: 'Đã hoàn thành' }).eq('id', item.id);
+    if (error) console.error('Supabase complete appointment failed:', error);
     printInvoice(item);
   };
 
   // Approve appointment
-  const handleApproveAppointment = (id) => {
+  const handleApproveAppointment = async (id) => {
     setAppointments(prev => 
       prev.map(a => a.id === id ? { ...a, isApproved: true } : a)
     );
+    const { error } = await supabase.from('appointments').update({ isApproved: true }).eq('id', id);
+    if (error) console.error('Supabase approve appointment failed:', error);
     alert('✅ Đã duyệt lịch hẹn thành công.');
   };
 
   // Share update with customer
-  const handleShareUpdate = (id) => {
+  const handleShareUpdate = async (id) => {
     setAppointments(prev => 
       prev.map(a => a.id === id ? { ...a, sharedUpdate: true } : a)
     );
+    const { error } = await supabase.from('appointments').update({ sharedUpdate: true }).eq('id', id);
+    if (error) console.error('Supabase share update failed:', error);
     alert('📨 Cập nhật đã được chia sẻ với khách hàng.');
   };
 
   // Cancel appointment
-  const handleCancel = (id) => {
+  const handleCancel = async (id) => {
     if (window.confirm("Bạn có chắc muốn hủy lịch này không?")) {
       setAppointments(prev => prev.filter(item => item.id !== id));
+      const { error } = await supabase.from('appointments').delete().eq('id', id);
+      if (error) console.error('Supabase delete appointment failed:', error);
     }
   };
 

@@ -50,6 +50,7 @@ const OwnerDashboard = () => {
   const [searchCustomer, setSearchCustomer] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedLog, setSelectedLog] = useState(null);
+  const [isSupabaseLoading, setIsSupabaseLoading] = useState(true);
 
   const handleAddTreatmentLog = (customerId, newLog) => {
     setCustomers(prev => prev.map(c =>
@@ -64,6 +65,88 @@ const OwnerDashboard = () => {
 
     setSelectedLog(newLog);
   };
+
+  const safeFetchTable = async (table, defaultValue = []) => {
+    const { data, error } = await supabase.from(table).select('*').order('id', { ascending: true });
+    return error || !data ? defaultValue : data;
+  };
+
+  const safeFetchSettings = async () => {
+    const { data, error } = await supabase.from('settings').select('*').single();
+    return error || !data ? initialData.settings : data;
+  };
+
+  const insertRow = async (table, row, setter) => {
+    const { data, error } = await supabase.from(table).insert([row]).select();
+    if (error) {
+      console.error(`Supabase insert ${table} failed:`, error);
+      return { error };
+    }
+    if (data && data.length > 0) {
+      setter(prev => [...prev, data[0]]);
+      return { data: data[0] };
+    }
+    return { data: row };
+  };
+
+  const updateRow = async (table, id, updates, setter) => {
+    const { data, error } = await supabase.from(table).update(updates).eq('id', id).select();
+    if (error) {
+      console.error(`Supabase update ${table} failed:`, error);
+      return { error };
+    }
+    if (data && data.length > 0) {
+      setter(prev => prev.map(item => item.id === id ? data[0] : item));
+      return { data: data[0] };
+    }
+    return { data: null };
+  };
+
+  const updateCustomerHistory = async (customerId, updatedHistory) => {
+    const { data, error } = await supabase.from('customers').update({ history: updatedHistory }).eq('id', customerId).select();
+    if (error) {
+      console.error('Supabase update customer history failed:', error);
+      return { error };
+    }
+    if (data && data.length > 0) {
+      setCustomers(prev => prev.map(c => c.id === customerId ? data[0] : c));
+      if (selectedCustomer?.id === customerId) {
+        setSelectedCustomer(data[0]);
+      }
+      return { data: data[0] };
+    }
+    return { data: null };
+  };
+
+  const updateOnlineOrderStatus = async (id, status) => {
+    return updateRow('online_orders', id, { status }, setOnlineOrders);
+  };
+
+  const loadSupabaseData = async () => {
+    setIsSupabaseLoading(true);
+    const [productsData, packagesData, staffsData, customersData, appointmentsData, onlineOrdersData, settingsData] = await Promise.all([
+      safeFetchTable('products', initialData.products),
+      safeFetchTable('packages', initialData.packages),
+      safeFetchTable('staffs', initialData.staffs),
+      safeFetchTable('customers', initialData.customers),
+      safeFetchTable('appointments', initialData.appointments),
+      safeFetchTable('online_orders', initialData.onlineOrders),
+      safeFetchSettings()
+    ]);
+
+    setProducts(productsData);
+    setPackages(packagesData);
+    setStaffs(staffsData);
+    setCustomers(customersData);
+    setAppointments(appointmentsData);
+    setOnlineOrders(onlineOrdersData);
+    setSettings(settingsData);
+    setIsSupabaseLoading(false);
+  };
+
+  useEffect(() => {
+    loadSupabaseData();
+  }, []);
 
   // ==================== HOOKS ====================
   const appointmentHandlers = useAppointmentHandlers({
@@ -137,28 +220,53 @@ const OwnerDashboard = () => {
   }, [staffs, customers]);
 
   // Handle modal form submission
-  const handleSaveModal = (e) => {
+  const handleSaveModal = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = Object.fromEntries(fd);
 
-    // Route to appropriate handler
     if (modal.type === 'product') {
-      setProducts([...products, { id: Date.now(), ...data, price: Number(data.price), stock: Number(data.stock) }]);
+      const product = {
+        ...data,
+        price: Number(data.price),
+        stock: Number(data.stock),
+        rewardPoints: Number(data.rewardPoints || 0)
+      };
+      const { error } = await insertRow('products', product, setProducts);
+      if (error) {
+        alert('Lưu sản phẩm cục bộ thành công, nhưng Supabase chưa đồng bộ được.');
+      } else {
+        alert('Đã lưu sản phẩm và đồng bộ Supabase.');
+      }
     } else if (modal.type === 'package') {
-      setPackages([...packages, { id: Date.now(), ...data, price: Number(data.price), sessions: Number(data.sessions) }]);
+      const newPackage = {
+        ...data,
+        price: Number(data.price),
+        sessions: Number(data.sessions),
+        rewardPoints: Number(data.rewardPoints || 0)
+      };
+      const { error } = await insertRow('packages', newPackage, setPackages);
+      if (error) {
+        alert('Lưu gói liệu trình cục bộ thành công, nhưng Supabase chưa đồng bộ được.');
+      } else {
+        alert('Đã lưu gói liệu trình và đồng bộ Supabase.');
+      }
     } else if (modal.type === 'staff') {
-      setStaffs([...staffs, {
-        id: Date.now(),
+      const newStaff = {
         ...data,
         baseSalary: Number(data.baseSalary) || settings.defaultBaseSalary,
         serviceComm: Number(data.serviceComm) || settings.defaultServiceComm,
         consultComm: Number(data.consultComm) || settings.defaultConsultComm,
         stocks: 0
-      }]);
+      };
+      const { error } = await insertRow('staffs', newStaff, setStaffs);
+      if (error) {
+        alert('Lưu nhân viên cục bộ thành công, nhưng Supabase chưa đồng bộ được.');
+      } else {
+        alert('Đã lưu nhân viên và đồng bộ Supabase.');
+      }
     } else if (modal.type === 'customer') {
-      setCustomers([...customers, {
-        id: Date.now(),
+      const newCustomer = {
         ...data,
         referralCode: data.phone,
         referredBy: data.referredBy || '',
@@ -167,40 +275,70 @@ const OwnerDashboard = () => {
         points: 0,
         stocks: 0,
         history: []
-      }]);
+      };
+      const { error } = await insertRow('customers', newCustomer, setCustomers);
+      if (error) {
+        alert('Lưu khách hàng cục bộ thành công, nhưng Supabase chưa đồng bộ được.');
+      } else {
+        alert('Đã lưu khách hàng và đồng bộ Supabase.');
+      }
     } else if (modal.type === 'customer_purchase') {
-      purchaseHandlers.handleCustomerPurchase(modal.data, data);
+      await purchaseHandlers.handleCustomerPurchase(modal.data, data);
     } else if (modal.type === 'confirm_order') {
-      purchaseHandlers.handleConfirmOrder(modal.data);
+      await purchaseHandlers.handleConfirmOrder(modal.data);
     } else if (modal.type === 'cancel_order') {
-      purchaseHandlers.handleCancelOrder(modal.data.id);
+      await purchaseHandlers.handleCancelOrder(modal.data.id);
     } else if (modal.type === 'appointment') {
-      setAppointments([...appointments, {
-        id: Date.now(),
-        ...data,
+      const newAppointment = {
+        customerName: data.customerName,
+        customerPhone: data.customerName,
+        service: data.service,
+        ktv: data.ktv,
         date: data.date,
         time: data.time,
         price: Number(data.price) || 0,
         status: 'Chờ phục vụ',
         isReminded: false,
         isApproved: false,
-        sharedUpdate: false
-      }]);
+        sharedUpdate: false,
+        created_at: new Date().toISOString()
+      };
+      const { error } = await insertRow('appointments', newAppointment, setAppointments);
+      if (error) {
+        alert('Lưu lịch hẹn cục bộ thành công, nhưng Supabase chưa đồng bộ được.');
+      } else {
+        alert('Đã lưu lịch hẹn và đồng bộ Supabase.');
+      }
     } else if (modal.type === 'treatment') {
       const newLog = {
+        customer_id: modal.data.id,
         date: data.date,
         service: data.service,
         staff: data.staff,
         note: data.note,
-        images: {}
+        images: {},
+        created_at: new Date().toISOString()
       };
+      const { data: saved, error } = await supabase.from('customer_treatment_logs').insert([newLog]).select();
+      const resultLog = saved && saved.length > 0 ? saved[0] : newLog;
+
       setCustomers(customers.map(c =>
         c.id === modal.data.id
-          ? { ...c, history: [...(c.history || []), newLog] }
+          ? { ...c, history: [...(c.history || []), resultLog] }
           : c
       ));
-      setSelectedLog(newLog);
-      alert('Đã thêm buổi điều trị thành công!');
+      setSelectedCustomer(prev =>
+        prev && prev.id === modal.data.id
+          ? { ...prev, history: [...(prev.history || []), resultLog] }
+          : prev
+      );
+      setSelectedLog(resultLog);
+
+      if (error) {
+        alert('Đã thêm buổi điều trị cục bộ, nhưng Supabase chưa đồng bộ được.');
+      } else {
+        alert('Đã thêm buổi điều trị và đồng bộ Supabase.');
+      }
     } else if (modal.type === 'treatment_images') {
       const beforeFile = fd.get('beforeImage');
       const afterFile = fd.get('afterFile');
@@ -216,26 +354,40 @@ const OwnerDashboard = () => {
         reader.readAsDataURL(file);
       });
 
-      Promise.all([
+      const [before, after] = await Promise.all([
         beforeFile ? processImage(beforeFile) : Promise.resolve(null),
         afterFile ? processImage(afterFile) : Promise.resolve(null)
-      ]).then(([before, after]) => {
-        const imageData = { ...modal.data.log.images };
-        if (before) imageData.before = before;
-        if (after) imageData.after = after;
+      ]);
 
-        setCustomers(customers.map(c =>
-          c.id === modal.data.customer.id
-            ? {
-                ...c,
-                history: c.history.map(log =>
-                  log === modal.data.log ? { ...log, images: imageData } : log
-                )
-              }
-            : c
-        ));
-        alert('Đã cập nhật ảnh thành công!');
-      });
+      const imageData = { ...modal.data.log.images };
+      if (before) imageData.before = before;
+      if (after) imageData.after = after;
+
+      setCustomers(customers.map(c =>
+        c.id === modal.data.customer.id
+          ? {
+              ...c,
+              history: c.history.map(log =>
+                log === modal.data.log ? { ...log, images: imageData } : log
+              )
+            }
+          : c
+      ));
+
+      if (modal.data.log.id) {
+        const { error } = await supabase
+          .from('customer_treatment_logs')
+          .update({ images: imageData })
+          .eq('id', modal.data.log.id);
+        if (error) {
+          console.error('Supabase treatment image update failed:', error);
+          alert('Ảnh đã cập nhật cục bộ, nhưng Supabase chưa đồng bộ được.');
+        } else {
+          alert('Đã cập nhật ảnh liệu trình và đồng bộ Supabase.');
+        }
+      } else {
+        alert('Đã cập nhật ảnh liệu trình cục bộ. Nếu đăng ký Supabase, ảnh sẽ được đồng bộ sau.');
+      }
     }
 
     setSearchCustomer('');
