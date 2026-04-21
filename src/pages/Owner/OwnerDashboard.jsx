@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 
 const OwnerDashboard = () => {
-  alert('OwnerDashboard loaded successfully');
-
   // --- 1. QUẢN LÝ TRẠNG THÁI (STATE) ---
   const [activeTab, setActiveTab] = useState('appointments');
   const [modal, setModal] = useState({ show: false, type: '', data: null });
