@@ -1591,10 +1591,10 @@ const OwnerDashboard = () => {
 
   // --- 6. GIAO DIỆN CHÍNH ---
   return (
-    <div style={layoutStyle}>
+    <div style={layoutStyle} className="responsive-layout">
       <div style={{color: 'white', padding: '10px', backgroundColor: 'red'}}>Owner Dashboard Loaded</div>
       {/* SIDEBAR NAVIGATION */}
-      <div style={sidebarStyle}>
+      <div style={sidebarStyle} className="responsive-sidebar">
         <h2 style={{color:'#10b981', textAlign:'center', marginBottom:'40px'}}>SPA MASTER</h2>
         <button onClick={() => setActiveTab('appointments')} style={activeTab === 'appointments' ? mActive : mBtn} className="responsive-btn">📅 Lịch Hẹn</button>
         <button onClick={() => setActiveTab('stocks')} style={activeTab === 'stocks' ? mActive : mBtn} className="responsive-btn">📈 Cổ Phần & Điểm</button>

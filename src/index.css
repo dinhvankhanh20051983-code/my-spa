@@ -167,6 +167,17 @@ html, body {
     height: 150px;
   }
   
+  /* Responsive cho layout */
+  .responsive-layout {
+    flex-direction: column;
+  }
+  
+  .responsive-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #334155;
+  }
+  
   /* Responsive cho grid layouts */
   .responsive-grid-2 {
     grid-template-columns: 1fr;
