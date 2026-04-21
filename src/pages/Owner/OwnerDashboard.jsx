@@ -41,7 +41,7 @@ const OwnerDashboard = () => {
           skinCondition: "Da nhạy cảm, có mụn viêm và sẹo thâm.",
           productsUsed: "Sửa rửa mặt dịu, serum trị mụn, kem dưỡng phục hồi.",
           nextStep: "Giữ ẩm, hạn chế nặn mụn, hẹn tái khám sau 7 ngày.",
-          images: {},
+          images: { before: 'https://via.placeholder.com/300x200/cccccc/000000?text=Before', after: 'https://via.placeholder.com/300x200/cccccc/000000?text=After' },
           sessionProgress: "Buổi 1/10"
         },
         {
@@ -52,7 +52,7 @@ const OwnerDashboard = () => {
           skinCondition: "Đã giảm sưng, tuyến bã điều chỉnh tốt.",
           productsUsed: "Kem làm dịu + serum phục hồi + mặt nạ thải độc.",
           nextStep: "Tiếp tục chăm sóc ẩm, hẹn buổi 3 trong 1 tuần.",
-          images: {},
+          images: { before: 'https://via.placeholder.com/300x200/cccccc/000000?text=Before', after: 'https://via.placeholder.com/300x200/cccccc/000000?text=After' },
           sessionProgress: "Buổi 2/10"
         }
       ]
