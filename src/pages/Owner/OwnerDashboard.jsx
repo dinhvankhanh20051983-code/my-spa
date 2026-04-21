@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useStyles } from './OwnerDashboard.styles';
 import {
   AppointmentsSection,
@@ -69,6 +69,23 @@ const OwnerDashboard = () => {
   });
 
   const styles = useStyles();
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 900 : false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 900);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const layoutStyle = isMobile ? { ...styles.layout, flexDirection: 'column' } : styles.layout;
+  const sidebarStyle = isMobile ? styles.sidebarMobile : styles.sidebar;
+  const mainContentStyle = isMobile ? styles.mainContentMobile : styles.mainContent;
+
+  const tabButtonStyle = (baseStyle, active) => {
+    const style = active ? { ...baseStyle, ...styles.navBtnActive } : baseStyle;
+    return isMobile ? { ...style, ...styles.navBtnMobile } : style;
+  };
 
   // ==================== UTILITY FUNCTIONS ====================
   
@@ -195,9 +212,9 @@ const OwnerDashboard = () => {
 
   // ==================== RENDER ====================
   return (
-    <div style={styles.layout}>
+    <div style={layoutStyle}>
       {/* SIDEBAR */}
-      <div style={styles.sidebar}>
+      <div style={sidebarStyle}>
         <h2 style={{ color: '#10b981', textAlign: 'center', marginBottom: '40px' }}>SPA MASTER</h2>
         
         {[
@@ -216,7 +233,7 @@ const OwnerDashboard = () => {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            style={activeTab === tab ? { ...styles.navBtn, ...styles.navBtnActive } : styles.navBtn}
+            style={tabButtonStyle(styles.navBtn, activeTab === tab)}
           >
             {label}
             {notify && <span style={{ color: '#ef4444', marginLeft: '5px' }}>●</span>}

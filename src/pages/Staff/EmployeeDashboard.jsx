@@ -4,6 +4,7 @@ import ChatBox from '../../components/Chat/ChatBox';
 const EmployeeDashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('schedule');
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(1);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 860 : false);
   const [appointments, setAppointments] = useState(() => {
     const storedAppointments = localStorage.getItem('spa_staff_appointments');
     if (storedAppointments) {
@@ -74,6 +75,13 @@ const EmployeeDashboard = ({ user, onLogout }) => {
     [baseSalary, completedCommission, referralBonus]
   );
 
+  const topBarStyle = isMobile ? { ...topBar, flexDirection: 'column', alignItems: 'flex-start' } : topBar;
+  const topActionStyle = isMobile ? { display: 'grid', gap: '10px', width: '100%' } : { display: 'flex', gap: '12px', alignItems: 'center' };
+  const headerCardStyle = isMobile ? { ...headerCard, flexDirection: 'column' } : headerCard;
+  const tabContainerStyle = isMobile ? { ...tabContainer, gridTemplateColumns: '1fr', gap: '10px' } : tabContainer;
+  const contentAreaStyle = isMobile ? { ...contentArea, gap: '16px' } : contentArea;
+  const gridScheduleStyle = isMobile ? { ...gridSchedule, gridTemplateColumns: '1fr', gap: '18px' } : gridSchedule;
+
   const handleStartAppointment = (id) => {
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'in_progress' } : a));
     setSelectedAppointmentId(id);
@@ -106,6 +114,13 @@ const EmployeeDashboard = ({ user, onLogout }) => {
   useEffect(() => {
     localStorage.setItem('spa_staff_appointments', JSON.stringify(appointments));
   }, [appointments]);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 860);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const parseDateTime = (date, time) => {
     const [day, month, year] = date.split('/').map(Number);
@@ -159,7 +174,7 @@ const EmployeeDashboard = ({ user, onLogout }) => {
   const renderScheduleTab = () => (
     <div style={{ display: 'grid', gap: '18px' }}>
       {renderNotificationBar()}
-      <div style={gridSchedule}>
+      <div style={gridScheduleStyle}>
         <div style={scheduleColumn}>
           {appointments.map(app => (
             <div key={app.id} style={{ ...cardItem, borderLeft: app.status === 'completed' ? '4px solid #22c55e' : app.status === 'in_progress' ? '4px solid #f97316' : '4px solid #3b82f6' }}>
@@ -300,7 +315,7 @@ const EmployeeDashboard = ({ user, onLogout }) => {
 
   return (
     <div style={container}>
-      <div style={topBar}>
+      <div style={topBarStyle}>
         <div>
           <h2 style={{ margin: 0, color: '#10b981' }}>Xin chào, {user?.name || 'Nhân viên'}</h2>
           <div style={{ marginTop: '8px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -308,13 +323,13 @@ const EmployeeDashboard = ({ user, onLogout }) => {
             <span style={pill}>Lịch hẹn mới: {newAppointmentsCount}</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div style={topActionStyle}>
           <button onClick={onLogout} style={btnLogout}>Đăng xuất</button>
           <button onClick={() => setActiveTab('chat')} style={btnChatTop}> Chat</button>
         </div>
       </div>
 
-      <div style={headerCard}>
+      <div style={headerCardStyle}>
         <div>
           <small style={{ color: '#94a3b8' }}>Lương tháng</small>
           <div style={headerValue}>{monthlySalary.toLocaleString()}đ</div>
@@ -327,13 +342,13 @@ const EmployeeDashboard = ({ user, onLogout }) => {
         </div>
       </div>
 
-      <div style={tabContainer}>
+      <div style={tabContainerStyle}>
         <button onClick={() => setActiveTab('schedule')} style={activeTab === 'schedule' ? tabActive : tabInactive}>Lịch Hẹn</button>
         <button onClick={() => setActiveTab('salary')} style={activeTab === 'salary' ? tabActive : tabInactive}>Lương</button>
         <button onClick={() => setActiveTab('chat')} style={activeTab === 'chat' ? tabActive : tabInactive}>Chat</button>
       </div>
 
-      <div style={contentArea}>
+      <div style={contentAreaStyle}>
         {activeTab === 'schedule' && renderScheduleTab()}
         {activeTab === 'salary' && renderSalaryTab()}
         {activeTab === 'chat' && renderChatTab()}

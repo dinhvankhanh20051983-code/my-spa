@@ -25,6 +25,29 @@ export const useStyles = () => ({
     padding: '40px',
     overflowY: 'auto'
   },
+  sidebarMobile: {
+    width: '100%',
+    backgroundColor: '#1e293b',
+    padding: '14px',
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '10px',
+    borderRight: 'none',
+    borderBottom: '1px solid #334155',
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
+    alignItems: 'center'
+  },
+  mainContentMobile: {
+    flex: 1,
+    padding: '20px',
+    overflowY: 'auto'
+  },
+  navBtnMobile: {
+    flex: '1 1 120px',
+    minWidth: '120px'
+  },
 
   // Navigation buttons
   navBtn: {

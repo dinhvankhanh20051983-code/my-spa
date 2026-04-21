@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import OwnerDashboard from './pages/Owner/OwnerDashboard';
 import CustomerDashboard from './pages/Customer/CustomerDashboard';
+import Booking from './pages/Customer/Booking';
+import Store from './pages/Customer/Store';
 import EmployeeDashboard from './pages/Staff/EmployeeDashboard';
 
 // --- 1. DANH SÁCH TÀI KHOẢN (Chỉ cần lưu SĐT và Tên) ---
@@ -130,7 +133,14 @@ export default function App() {
         </>
       )}
       {user.role === 'staff' && <EmployeeDashboard user={user} onLogout={handleLogout} />}
-      {user.role === 'customer' && <CustomerDashboard onLogout={handleLogout} />}
+      {user.role === 'customer' && (
+        <Routes>
+          <Route path="/customer" element={<CustomerDashboard onLogout={handleLogout} />} />
+          <Route path="/customer/booking" element={<Booking onLogout={handleLogout} />} />
+          <Route path="/customer/store" element={<Store onLogout={handleLogout} />} />
+          <Route path="*" element={<Navigate to="/customer" replace />} />
+        </Routes>
+      )}
     </div>
   );
 }
