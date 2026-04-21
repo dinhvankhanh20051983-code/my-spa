@@ -112,14 +112,23 @@ const LoginScreen = ({ onLogin }) => {
 
 // --- 5. COMPONENT CHÍNH (APP ENTRY) ---
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('spa_user'));
+    } catch {
+      return null;
+    }
+  });
 
   const handleLogin = (role, userData) => {
-    setUser({ role, ...userData });
+    const newUser = { role, ...userData };
+    setUser(newUser);
+    localStorage.setItem('spa_user', JSON.stringify(newUser));
   };
 
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem('spa_user');
   };
 
   if (!user) return <LoginScreen onLogin={handleLogin} />;
