@@ -144,7 +144,7 @@ const OwnerDashboard = () => {
   const lb = { fontSize:'12px', color:'#10b981', marginBottom:'5px', display:'block', fontWeight:'bold' };
   const inStyle = { width:'100%', padding:'12px', borderRadius:'8px', backgroundColor:'#0f172a', border:'1px solid #334155', color:'white', marginBottom:'15px', boxSizing:'border-box' };
   const overlayStyle = { position:'fixed', top:0, left:0, right:0, bottom:0, backgroundColor:'rgba(0,0,0,0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:100 };
-  const formBoxStyle = { backgroundColor:'#1e293b', padding:'30px', borderRadius:'20px', width:'500px', maxHeight:'90vh', overflowY:'auto' };
+  const formBoxStyle = { backgroundColor:'#1e293b', padding:'30px', borderRadius:'20px', width:'100%', maxWidth:'500px', maxHeight:'90vh', overflowY:'auto' };
   const priceStyle = { color:'#fbbf24', fontSize:'22px', fontWeight:'bold', margin:'10px 0' };
   const subText = { color:'#94a3b8', fontSize:'13px', margin:'5px 0' };
   const infoText = { fontSize:'14px', margin:'5px 0' };
@@ -220,7 +220,7 @@ const OwnerDashboard = () => {
     backgroundColor: '#1e293b',
     borderRadius: '12px',
     border: '1px solid #334155',
-    overflow: 'hidden',
+    overflow: 'auto',
     marginTop: '20px'
   };
 
@@ -1532,9 +1532,9 @@ const OwnerDashboard = () => {
         </button>
       </div>
 
-      <div style={chatContainer}>
+      <div style={chatContainer} className="responsive-chat">
         {/* SIDEBAR: Danh sách người chat & Tìm kiếm */}
-        <div style={chatSidebar}>
+        <div style={chatSidebar} className="responsive-chat-sidebar">
           <input 
             style={{ ...inStyle, padding: '8px', fontSize: '12px' }} 
             placeholder="🔍 Tìm tên hoặc SĐT..." 

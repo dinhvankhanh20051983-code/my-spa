@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import OwnerDashboard from './pages/Owner/OwnerDashboard';
 import CustomerDashboard from './pages/Customer/CustomerDashboard';
 import EmployeeDashboard from './pages/Staff/EmployeeDashboard';
+import Booking from './pages/Customer/Booking';
+import Store from './pages/Customer/Store';
 
 // --- 1. DANH SÁCH TÀI KHOẢN (Chỉ cần lưu SĐT và Tên) ---
 const SYSTEM_USERS = {
@@ -121,16 +124,22 @@ export default function App() {
 
   if (!user) return <LoginScreen onLogin={handleLogin} />;
 
+  const defaultPath = user.role === 'customer' ? '/customer' : user.role === 'staff' ? '/employee' : '/owner';
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0f172a' }}>
       {user.role === 'owner' && (
-        <>
-          <button onClick={handleLogout} style={btnFloatExit}>🔒 ĐĂNG XUẤT AN TOÀN</button>
-          <OwnerDashboard />
-        </>
+        <button onClick={handleLogout} style={btnFloatExit}>🔒 ĐĂNG XUẤT AN TOÀN</button>
       )}
-      {user.role === 'staff' && <EmployeeDashboard user={user} onLogout={handleLogout} />}
-      {user.role === 'customer' && <CustomerDashboard onLogout={handleLogout} />}
+      <Routes>
+        <Route path="/" element={<Navigate to={defaultPath} replace />} />
+        <Route path="/customer" element={user.role === 'customer' ? <CustomerDashboard onLogout={handleLogout} /> : <Navigate to={defaultPath} replace />} />
+        <Route path="/customer/booking" element={user.role === 'customer' ? <Booking /> : <Navigate to={defaultPath} replace />} />
+        <Route path="/customer/store" element={user.role === 'customer' ? <Store /> : <Navigate to={defaultPath} replace />} />
+        <Route path="/employee" element={user.role === 'staff' ? <EmployeeDashboard user={user} onLogout={handleLogout} /> : <Navigate to={defaultPath} replace />} />
+        <Route path="/owner" element={user.role === 'owner' ? <OwnerDashboard /> : <Navigate to={defaultPath} replace />} />
+        <Route path="*" element={<Navigate to={defaultPath} replace />} />
+      </Routes>
     </div>
   );
 }

@@ -21,10 +21,21 @@ const CustomerDashboard = ({ onLogout }) => {
     { id: 1, name: 'Trị mụn tầng sâu', used: 6, total: 10, status: 'Đang chạy' },
   ]);
 
-  const [purchasedProducts] = useState([
-    { id: 1, name: 'Serum Vitamin C', qty: 2, price: 250000 },
-    { id: 2, name: 'Gel rửa mặt dịu nhẹ', qty: 1, price: 180000 },
-  ]);
+  const [purchasedProducts, setPurchasedProducts] = useState(() => {
+    const stored = localStorage.getItem('spa_customer_purchased_products');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return [];
+      }
+    }
+
+    return [
+      { id: 1, name: 'Serum Vitamin C', qty: 2, price: 250000 },
+      { id: 2, name: 'Gel rửa mặt dịu nhẹ', qty: 1, price: 180000 },
+    ];
+  });
 
   const [treatmentHistory] = useState([
     { id: 1, date: '2026-04-10', service: 'Trị mụn B1', staff: 'KTV Thảo', note: 'Da giảm sưng, cần bôi thuốc đều', before: '', after: '' },
@@ -56,6 +67,10 @@ const CustomerDashboard = ({ onLogout }) => {
   useEffect(() => {
     localStorage.setItem('spa_customer_appointments', JSON.stringify(appointments));
   }, [appointments]);
+
+  useEffect(() => {
+    localStorage.setItem('spa_customer_purchased_products', JSON.stringify(purchasedProducts));
+  }, [purchasedProducts]);
 
   const handleCancelApp = (id) => {
     if (window.confirm('Bạn muốn hủy lịch hẹn này?')) {
