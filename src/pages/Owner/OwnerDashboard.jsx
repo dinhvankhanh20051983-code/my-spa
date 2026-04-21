@@ -50,6 +50,20 @@ const OwnerDashboard = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedLog, setSelectedLog] = useState(null);
 
+  const handleAddTreatmentLog = (customerId, newLog) => {
+    setCustomers(prev => prev.map(c =>
+      c.id === customerId ? { ...c, history: [...(c.history || []), newLog] } : c
+    ));
+
+    setSelectedCustomer(prev =>
+      prev && prev.id === customerId
+        ? { ...prev, history: [...(prev.history || []), newLog] }
+        : prev
+    );
+
+    setSelectedLog(newLog);
+  };
+
   // ==================== HOOKS ====================
   const appointmentHandlers = useAppointmentHandlers({
     appointments,
@@ -306,6 +320,15 @@ const OwnerDashboard = () => {
           />
         )}
 
+        {activeTab === 'treatment_history' && !selectedCustomer && (
+          <div style={styles.section}>
+            <h3 style={styles.sectionTitle}>📜 Nhật ký liệu trình</h3>
+            <p style={{ color: '#cbd5e1', marginTop: '10px' }}>
+              Chọn khách hàng trong mục “🧖‍♀️ Khách Hàng” để xem hoặc cập nhật nhật ký liệu trình.
+            </p>
+          </div>
+        )}
+
         {activeTab === 'treatment_history' && selectedCustomer && (
           <TreatmentDetailSection
             customer={selectedCustomer}
@@ -314,6 +337,7 @@ const OwnerDashboard = () => {
             onSetSelectedLog={setSelectedLog}
             onSetActiveTab={setActiveTab}
             onSetModal={setModal}
+            onAddTreatmentLog={handleAddTreatmentLog}
           />
         )}
 

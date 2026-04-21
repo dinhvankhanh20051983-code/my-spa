@@ -44,9 +44,19 @@ export const CustomersSection = ({
               </div>
             </div>
 
-            <div style={{ marginTop: '14px' }}>
+            <div style={{ marginTop: '14px', display: 'grid', gap: '10px' }}>
               <button style={{ ...styles.btnPrimaryFull }} onClick={() => onSetModal({ show: true, type: 'appointment', data: c })}>
                 Đặt lịch buổi làm
+              </button>
+              <button
+                style={{ ...styles.btnCancel, width: '100%', marginTop: '0' }}
+                onClick={() => {
+                  onSetSelectedCustomer(c);
+                  onSetSelectedLog(c.history && c.history.length > 0 ? c.history[0] : null);
+                  onSetActiveTab('treatment_history');
+                }}
+              >
+                Xem nhật ký liệu trình
               </button>
             </div>
           </div>

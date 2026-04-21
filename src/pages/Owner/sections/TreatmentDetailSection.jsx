@@ -6,7 +6,8 @@ export const TreatmentDetailSection = ({
   styles,
   onSetSelectedLog,
   onSetActiveTab,
-  onSetModal
+  onSetModal,
+  onAddTreatmentLog
 }) => {
   const [treatmentNote, setTreatmentNote] = useState(selectedLog?.note || '');
 
@@ -22,9 +23,10 @@ export const TreatmentDetailSection = ({
       note: treatmentNote,
       images: {}
     };
-    onSetSelectedLog(newLog);
+
+    onAddTreatmentLog(customer.id, newLog);
     setTreatmentNote('');
-    alert('Đã thêm buổi liệu trình mới!');
+    alert('Đã thêm buổi liệu trình mới vào hồ sơ khách hàng!');
   };
 
   return (
