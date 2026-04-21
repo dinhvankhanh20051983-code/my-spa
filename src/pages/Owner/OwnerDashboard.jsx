@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const OwnerDashboard = () => {
   // --- 1. QUẢN LÝ TRẠNG THÁI (STATE) ---
@@ -102,6 +102,14 @@ const OwnerDashboard = () => {
   const [searchCustomer, setSearchCustomer] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedLog, setSelectedLog] = useState(null);
+
+  // Set default selectedCustomer when entering treatment_history tab
+  useEffect(() => {
+    if (activeTab === 'treatment_history' && !selectedCustomer && customers.length > 0) {
+      setSelectedCustomer(customers[0]);
+      setSelectedLog(customers[0].history && customers[0].history.length > 0 ? customers[0].history[0] : null);
+    }
+  }, [activeTab, selectedCustomer, customers]);
 
   // Đơn hàng online từ app khách hàng
   const [onlineOrders, setOnlineOrders] = useState([
