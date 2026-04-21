@@ -178,6 +178,19 @@ html, body {
     border-bottom: 1px solid #334155;
   }
   
+  /* Responsive cho chat */
+  .responsive-chat {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .responsive-chat-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #334155;
+    height: auto;
+  }
+  
   /* Responsive cho grid layouts */
   .responsive-grid-2 {
     grid-template-columns: 1fr;
