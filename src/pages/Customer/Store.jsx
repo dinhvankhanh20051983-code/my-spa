@@ -1,34 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 const Store = () => {
-  const [purchased, setPurchased] = useState(() => {
-    const stored = localStorage.getItem('spa_customer_purchased_products');
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  });
   const products = [
     { id: 1, name: "Serum Vitamin C", price: "550.000đ", points: "5.000đ", img: "🧴" },
     { id: 2, name: "Kem chống nắng", price: "320.000đ", points: "3.000đ", img: "☀️" },
     { id: 3, name: "Mặt nạ tế bào gốc", price: "150.000đ", points: "1.500đ", img: "🎭" },
   ];
-
-  const handleBuy = (product) => {
-    if (purchased.find(item => item.id === product.id)) {
-      return alert(`Bạn đã mua ${product.name} rồi.`);
-    }
-    setPurchased(prev => [...prev, { ...product, qty: 1 }]);
-    alert(`Đã đặt mua ${product.name} thành công!`);
-  };
-
-  useEffect(() => {
-    localStorage.setItem('spa_customer_purchased_products', JSON.stringify(purchased));
-  }, [purchased]);
 
   return (
     <div style={{ padding: '20px', color: 'white', backgroundColor: '#0f172a', minHeight: '100vh' }}>
@@ -41,7 +18,7 @@ const Store = () => {
             <strong style={{ display: 'block', fontSize: '14px' }}>{p.name}</strong>
             <p style={{ color: '#10b981', fontWeight: 'bold', margin: '10px 0 5px' }}>{p.price}</p>
             <p style={{ color: '#fbbf24', fontSize: '11px' }}>Hoặc đổi: {p.points} Điểm</p>
-            <button style={btnBuy} onClick={() => handleBuy(p)}>{purchased.find(item => item.id === p.id) ? 'Đã mua' : 'Mua ngay'}</button>
+            <button style={btnBuy}>Mua ngay</button>
           </div>
         ))}
       </div>

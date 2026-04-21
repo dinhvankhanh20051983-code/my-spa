@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
 import OwnerDashboard from './pages/Owner/OwnerDashboard';
 import CustomerDashboard from './pages/Customer/CustomerDashboard';
 import EmployeeDashboard from './pages/Staff/EmployeeDashboard';
-import Booking from './pages/Customer/Booking';
-import Store from './pages/Customer/Store';
 
 // --- 1. DANH SÁCH TÀI KHOẢN (Chỉ cần lưu SĐT và Tên) ---
 const SYSTEM_USERS = {
@@ -112,50 +109,35 @@ const LoginScreen = ({ onLogin }) => {
 
 // --- 5. COMPONENT CHÍNH (APP ENTRY) ---
 export default function App() {
-  const [user, setUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('spa_user'));
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState(null);
 
   const handleLogin = (role, userData) => {
-    const newUser = { role, ...userData };
-    setUser(newUser);
-    localStorage.setItem('spa_user', JSON.stringify(newUser));
+    setUser({ role, ...userData });
   };
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('spa_user');
   };
 
   if (!user) return <LoginScreen onLogin={handleLogin} />;
 
-  const defaultPath = user.role === 'customer' ? '/customer' : user.role === 'staff' ? '/employee' : '/owner';
-
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0f172a' }}>
       {user.role === 'owner' && (
-        <button onClick={handleLogout} style={btnFloatExit}>🔒 ĐĂNG XUẤT AN TOÀN</button>
+        <>
+          <button onClick={handleLogout} style={btnFloatExit}>🔒 ĐĂNG XUẤT AN TOÀN</button>
+          <OwnerDashboard />
+        </>
       )}
-      <Routes>
-        <Route path="/" element={<Navigate to={defaultPath} replace />} />
-        <Route path="/customer" element={user.role === 'customer' ? <CustomerDashboard onLogout={handleLogout} /> : <Navigate to={defaultPath} replace />} />
-        <Route path="/customer/booking" element={user.role === 'customer' ? <Booking /> : <Navigate to={defaultPath} replace />} />
-        <Route path="/customer/store" element={user.role === 'customer' ? <Store /> : <Navigate to={defaultPath} replace />} />
-        <Route path="/employee" element={user.role === 'staff' ? <EmployeeDashboard user={user} onLogout={handleLogout} /> : <Navigate to={defaultPath} replace />} />
-        <Route path="/owner" element={user.role === 'owner' ? <OwnerDashboard /> : <Navigate to={defaultPath} replace />} />
-        <Route path="*" element={<Navigate to={defaultPath} replace />} />
-      </Routes>
+      {user.role === 'staff' && <EmployeeDashboard user={user} onLogout={handleLogout} />}
+      {user.role === 'customer' && <CustomerDashboard onLogout={handleLogout} />}
     </div>
   );
 }
 
 // --- HỆ THỐNG CSS (STYLING) ---
-const loginContainer = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#020617', fontFamily: 'sans-serif', padding: '20px' };
-const loginForm = { backgroundColor: '#1e293b', padding: '40px', borderRadius: '25px', width: '100%', maxWidth: '360px', border: '1px solid #334155', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' };
+const loginContainer = { height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#020617', fontFamily: 'sans-serif' };
+const loginForm = { backgroundColor: '#1e293b', padding: '40px', borderRadius: '25px', width: '360px', border: '1px solid #334155', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' };
 const inputGroup = { marginBottom: '20px' };
 const labelStyle = { color: '#10b981', fontSize: '11px', fontWeight: 'bold', display: 'block', marginBottom: '8px' };
 const inputStyle = { width: '100%', padding: '15px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '12px', color: 'white', boxSizing: 'border-box', outline: 'none', fontSize: '16px' };

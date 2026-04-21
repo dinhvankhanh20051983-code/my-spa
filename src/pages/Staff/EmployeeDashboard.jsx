@@ -159,7 +159,7 @@ const EmployeeDashboard = ({ user, onLogout }) => {
   const renderScheduleTab = () => (
     <div style={{ display: 'grid', gap: '18px' }}>
       {renderNotificationBar()}
-      <div style={gridSchedule} className="responsive-grid-2">
+      <div style={gridSchedule}>
         <div style={scheduleColumn}>
           {appointments.map(app => (
             <div key={app.id} style={{ ...cardItem, borderLeft: app.status === 'completed' ? '4px solid #22c55e' : app.status === 'in_progress' ? '4px solid #f97316' : '4px solid #3b82f6' }}>
@@ -299,7 +299,7 @@ const EmployeeDashboard = ({ user, onLogout }) => {
   );
 
   return (
-    <div style={container} className="responsive-employee-dashboard">
+    <div style={container}>
       <div style={topBar}>
         <div>
           <h2 style={{ margin: 0, color: '#10b981' }}>Xin chào, {user?.name || 'Nhân viên'}</h2>
