@@ -931,8 +931,8 @@ const OwnerDashboard = () => {
                 <div style={infoBox}>{selectedLog.nextStep || 'Chưa cập nhật'}</div>
 
                 <label style={lb}>Hình ảnh đối chứng (Before & After):</label>
-                <div style={imageGrid}>
-                  <div style={imgContainer}>
+                <div style={imageGrid} className="responsive-image-grid">
+                  <div style={imgContainer} className="img-container">
                     <span style={imgLabel}>Trước (Before)</span>
                     {selectedLog.images && selectedLog.images.before ? (
                       <img src={selectedLog.images.before} alt="Before" style={{width:'100%', height:'180px', objectFit:'cover', borderRadius:'8px'}} />
@@ -940,7 +940,7 @@ const OwnerDashboard = () => {
                       <div style={imgPlaceholder}>📷 Chưa có ảnh</div>
                     )}
                   </div>
-                  <div style={imgContainer}>
+                  <div style={imgContainer} className="img-container">
                     <span style={imgLabel}>Sau (After)</span>
                     {selectedLog.images && selectedLog.images.after ? (
                       <img src={selectedLog.images.after} alt="After" style={{width:'100%', height:'180px', objectFit:'cover', borderRadius:'8px'}} />

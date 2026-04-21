@@ -157,6 +157,16 @@ html, body {
     margin: 10px;
   }
   
+  /* Responsive cho image grid */
+  .responsive-image-grid {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .responsive-image-grid .img-container {
+    height: 150px;
+  }
+  
   /* Responsive cho grid layouts */
   .responsive-grid-2 {
     grid-template-columns: 1fr;
