@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 
 const OwnerDashboard = () => {
-  console.log('OwnerDashboard component loaded');
-
   // --- 1. QUẢN LÝ TRẠNG THÁI (STATE) ---
   const [activeTab, setActiveTab] = useState('appointments');
   const [modal, setModal] = useState({ show: false, type: '', data: null });
@@ -1592,7 +1590,6 @@ const OwnerDashboard = () => {
   // --- 6. GIAO DIỆN CHÍNH ---
   return (
     <div style={layoutStyle} className="responsive-layout">
-      <div style={{color: 'white', padding: '10px', backgroundColor: 'red'}}>Owner Dashboard Loaded</div>
       {/* SIDEBAR NAVIGATION */}
       <div style={sidebarStyle} className="responsive-sidebar">
         <h2 style={{color:'#10b981', textAlign:'center', marginBottom:'40px'}}>SPA MASTER</h2>
