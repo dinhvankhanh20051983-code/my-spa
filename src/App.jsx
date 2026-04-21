@@ -136,8 +136,8 @@ export default function App() {
 }
 
 // --- HỆ THỐNG CSS (STYLING) ---
-const loginContainer = { height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#020617', fontFamily: 'sans-serif' };
-const loginForm = { backgroundColor: '#1e293b', padding: '40px', borderRadius: '25px', width: '360px', border: '1px solid #334155', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' };
+const loginContainer = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#020617', fontFamily: 'sans-serif', padding: '20px' };
+const loginForm = { backgroundColor: '#1e293b', padding: '40px', borderRadius: '25px', width: '100%', maxWidth: '360px', border: '1px solid #334155', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' };
 const inputGroup = { marginBottom: '20px' };
 const labelStyle = { color: '#10b981', fontSize: '11px', fontWeight: 'bold', display: 'block', marginBottom: '8px' };
 const inputStyle = { width: '100%', padding: '15px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '12px', color: 'white', boxSizing: 'border-box', outline: 'none', fontSize: '16px' };
