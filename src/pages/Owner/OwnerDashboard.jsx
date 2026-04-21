@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 import { useStyles } from './OwnerDashboard.styles';
 import {
   AppointmentsSection,
@@ -84,12 +85,30 @@ const OwnerDashboard = () => {
 
   const styles = useStyles();
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 900 : false);
+  const [isOrderSyncing, setIsOrderSyncing] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 900);
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const loadOnlineOrders = async () => {
+      setIsOrderSyncing(true);
+      const { data, error } = await supabase
+        .from('online_orders')
+        .select('*')
+        .order('orderDate', { ascending: false });
+
+      if (!error && data) {
+        setOnlineOrders(data);
+      }
+      setIsOrderSyncing(false);
+    };
+
+    loadOnlineOrders();
   }, []);
 
   const layoutStyle = isMobile ? { ...styles.layout, flexDirection: 'column' } : styles.layout;

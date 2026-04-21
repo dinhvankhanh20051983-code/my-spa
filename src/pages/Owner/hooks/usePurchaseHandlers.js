@@ -1,6 +1,8 @@
 /**
  * Customer purchase handlers
  */
+import { supabase } from '../../../lib/supabaseClient';
+
 export const usePurchaseHandlers = ({
   customers,
   packages,
@@ -75,7 +77,7 @@ export const usePurchaseHandlers = ({
   };
 
   // Confirm online order
-  const handleConfirmOrder = (order) => {
+  const handleConfirmOrder = async (order) => {
     const customer = customers.find(c => c.phone === order.customerPhone);
     if (!customer) {
       alert('Không tìm thấy khách hàng.');
@@ -130,14 +132,34 @@ export const usePurchaseHandlers = ({
     setOnlineOrders(prev => 
       prev.map(o => o.id === order.id ? { ...o, status: 'confirmed' } : o)
     );
+
+    const { error: updateError } = await supabase
+      .from('online_orders')
+      .update({ status: 'confirmed' })
+      .eq('id', order.id);
+
+    if (updateError) {
+      console.error('Supabase update confirm order failed:', updateError);
+    }
+
     alert(`Đã xác nhận đơn hàng ${order.id} thành công! Khách hàng ${customer.name} nhận ${order.rewardPoints} điểm thưởng.`);
   };
 
   // Cancel online order
-  const handleCancelOrder = (orderId) => {
+  const handleCancelOrder = async (orderId) => {
     setOnlineOrders(prev => 
       prev.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o)
     );
+
+    const { error: cancelError } = await supabase
+      .from('online_orders')
+      .update({ status: 'cancelled' })
+      .eq('id', orderId);
+
+    if (cancelError) {
+      console.error('Supabase cancel order failed:', cancelError);
+    }
+
     alert(`Đã hủy đơn hàng ${orderId}.`);
   };
 
