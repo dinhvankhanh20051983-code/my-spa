@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
 /**
@@ -288,6 +288,9 @@ export const useEmployeeDashboard = (user) => {
     }
   }, [user]);
 
+  // Calculate salary data
+  const salaryData = useMemo(() => calculateSalaryData(), [staffData, appointments]);
+
   return {
     appointments,
     treatmentLogs,
@@ -296,7 +299,7 @@ export const useEmployeeDashboard = (user) => {
     chatMessages,
     isLoading,
     error,
-    salaryData: calculateSalaryData(),
+    salaryData,
     updateAppointmentStatus,
     addTreatmentLog,
     updateTreatmentLog,
