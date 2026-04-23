@@ -884,10 +884,11 @@ const EmployeeDashboard = ({ user, onLogout }) => {
   };
 
   return (
-    <div style={container}>
-      <div style={topBar}>
-        <h1 style={{ color: '#9CAF88', fontSize: isMobile ? '18px' : '22px', margin: 0 }}>Nhân Viên SPA</h1>
-        <div style={{ display: 'flex', gap: isMobile ? '8px' : '12px', alignItems: 'center' }}>
+    <>
+      <div style={container}>
+        <div style={topBar}>
+          <h1 style={{ color: '#9CAF88', fontSize: isMobile ? '18px' : '22px', margin: 0 }}>Nhân Viên SPA</h1>
+          <div style={{ display: 'flex', gap: isMobile ? '8px' : '12px', alignItems: 'center' }}>
           <button onClick={() => setActiveTab('chat')} style={btnChatTop}>💬 Chat với Chủ</button>
           <button onClick={onLogout} style={btnLogout}>Đăng Xuất</button>
         </div>
@@ -1213,84 +1214,83 @@ const EmployeeDashboard = ({ user, onLogout }) => {
         </div>
       )}
     </div>
+
+    {/* Edit Treatment Modal */}
+    {editingTreatment && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: isMobile ? '16px' : '24px'
+      }}>
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '12px',
+          padding: isMobile ? '16px' : '24px',
+          maxWidth: isMobile ? '95vw' : '500px',
+          width: '100%',
+          textAlign: 'center'
+        }}>
+          <h3 style={{ margin: '0 0 20px 0', color: '#9CAF88', fontSize: isMobile ? '18px' : '20px' }}>
+            Chỉnh Sửa Nhật Ký Trị Liệu
+          </h3>
+
+          <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: '#3D3D3D', fontWeight: 'bold' }}>
+              Ghi chú liệu trình:
+            </label>
+            <textarea
+              value={editNote}
+              onChange={(e) => setEditNote(e.target.value)}
+              placeholder="Cập nhật diễn biến liệu trình..."
+              style={{
+                width: '100%',
+                minHeight: '100px',
+                padding: '12px',
+                border: '1px solid #E8E3D8',
+                borderRadius: '8px',
+                fontSize: '14px',
+                resize: 'vertical'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <button
+              onClick={async () => {
+                try {
+                  await updateTreatmentLog(editingTreatment.id, { note: editNote });
+                  setEditingTreatment(null);
+                  setEditNote('');
+                  alert('Đã cập nhật nhật ký trị liệu thành công!');
+                } catch (error) {
+                  alert('Không thể cập nhật: ' + error.message);
+                }
+              }}
+              style={btnPrimary}
+            >
+              💾 Lưu Thay Đổi
+            </button>
+            <button
+              onClick={() => {
+                setEditingTreatment(null);
+                setEditNote('');
+              }}
+              style={btnSecondary}
+            >
+              Hủy
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
-
-{/* Edit Treatment Modal */}
-{editingTreatment && (
-  <div style={{
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: isMobile ? '16px' : '24px'
-  }}>
-    <div style={{
-      backgroundColor: '#FFFFFF',
-      borderRadius: '12px',
-      padding: isMobile ? '16px' : '24px',
-      maxWidth: isMobile ? '95vw' : '500px',
-      width: '100%',
-      textAlign: 'center'
-    }}>
-      <h3 style={{ margin: '0 0 20px 0', color: '#9CAF88', fontSize: isMobile ? '18px' : '20px' }}>
-        Chỉnh Sửa Nhật Ký Trị Liệu
-      </h3>
-
-      <div style={{ marginBottom: '20px', textAlign: 'left' }}>
-        <label style={{ display: 'block', marginBottom: '8px', color: '#3D3D3D', fontWeight: 'bold' }}>
-          Ghi chú liệu trình:
-        </label>
-        <textarea
-          value={editNote}
-          onChange={(e) => setEditNote(e.target.value)}
-          placeholder="Cập nhật diễn biến liệu trình..."
-          style={{
-            width: '100%',
-            minHeight: '100px',
-            padding: '12px',
-            border: '1px solid #E8E3D8',
-            borderRadius: '8px',
-            fontSize: '14px',
-            resize: 'vertical'
-          }}
-        />
-      </div>
-
-      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-        <button
-          onClick={async () => {
-            try {
-              await updateTreatmentLog(editingTreatment.id, { note: editNote });
-              setEditingTreatment(null);
-              setEditNote('');
-              alert('Đã cập nhật nhật ký trị liệu thành công!');
-            } catch (error) {
-              alert('Không thể cập nhật: ' + error.message);
-            }
-          }}
-          style={btnPrimary}
-        >
-          💾 Lưu Thay Đổi
-        </button>
-        <button
-          onClick={() => {
-            setEditingTreatment(null);
-            setEditNote('');
-          }}
-          style={btnSecondary}
-        >
-          Hủy
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-export default EmployeeDashboard;
