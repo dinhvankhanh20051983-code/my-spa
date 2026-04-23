@@ -236,11 +236,11 @@ const EmployeeDashboard = ({ user, onLogout }) => {
               </div>
 
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <button onClick={() => handleStartAppointment(appointment.id)} style={btnPrimary}>
+                <button onClick={async () => await handleStartAppointment(appointment.id)} style={btnPrimary}>
                   Bắt Đầu Liệu Trình
                 </button>
                 {!appointment.is_reminded && (
-                  <button onClick={() => handleSendReminder(appointment.id)} style={btnSecondary}>
+                  <button onClick={async () => await handleSendReminder(appointment.id)} style={btnSecondary}>
                     Nhắc Nhở
                   </button>
                 )}
@@ -328,14 +328,14 @@ const EmployeeDashboard = ({ user, onLogout }) => {
                   }}
                 />
                 <button
-                  onClick={() => handleAddTreatmentLog(appointment.id)}
+                  onClick={async () => await handleAddTreatmentLog(appointment.id)}
                   style={{ ...btnSecondary, marginTop: '8px', fontSize: isMobile ? '12px' : '13px', padding: '6px 12px' }}
                 >
                   ➕ Thêm Nhật Ký Liệu Trình
                 </button>
               </div>
 
-              <button onClick={() => handleCompleteAppointment(appointment.id)} style={btnPrimary}>
+              <button onClick={async () => await handleCompleteAppointment(appointment.id)} style={btnPrimary}>
                 Hoàn Thành Liệu Trình
               </button>
             </div>
