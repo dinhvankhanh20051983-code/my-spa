@@ -19,11 +19,14 @@ const EmployeeDashboard = ({ user, onLogout }) => {
   const [showPhotoCapture, setShowPhotoCapture] = useState(null);
   const [treatmentNotes, setTreatmentNotes] = useState('');
   const [selectedTreatment, setSelectedTreatment] = useState(null);
+  const [editingTreatment, setEditingTreatment] = useState(null);
+  const [editNote, setEditNote] = useState('');
 
   // Use Supabase hook for data management
   const {
     appointments,
     treatmentLogs,
+    staffTreatmentLogs,
     staffData,
     chatMessages,
     isLoading,
@@ -31,6 +34,7 @@ const EmployeeDashboard = ({ user, onLogout }) => {
     salaryData,
     updateAppointmentStatus,
     addTreatmentLog,
+    updateTreatmentLog,
     sendChatMessage,
     refreshData
   } = useEmployeeDashboard(user);
@@ -346,6 +350,79 @@ const EmployeeDashboard = ({ user, onLogout }) => {
     );
   };
 
+  const renderHistoryTab = () => {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '14px' : '18px' }}>
+        <div style={notificationBar}>
+          <h3 style={{ margin: '0 0 8px 0', color: '#9CAF88', fontSize: isMobile ? '16px' : '18px' }}>
+            📋 Lịch Sử Trị Liệu Của Bạn
+          </h3>
+          <p style={{ margin: 0, color: '#6B7280', fontSize: isMobile ? '12px' : '13px' }}>
+            Xem và chỉnh sửa nhật ký các buổi trị liệu bạn đã thực hiện.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {staffTreatmentLogs.map(log => (
+            <div key={log.id} style={cardItem}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                <div>
+                  <div style={{ fontWeight: 'bold', color: '#3D3D3D', fontSize: isMobile ? '14px' : '16px' }}>
+                    {log.service}
+                  </div>
+                  <div style={{ color: '#6B7280', fontSize: isMobile ? '12px' : '13px' }}>
+                    Khách: {log.customer_name || 'N/A'}
+                  </div>
+                  <div style={{ color: '#6B7280', fontSize: '11px' }}>
+                    {new Date(log.date).toLocaleDateString('vi-VN')}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingTreatment(log);
+                    setEditNote(log.note || '');
+                  }}
+                  style={{ ...btnSecondary, fontSize: '12px', padding: '6px 12px' }}
+                >
+                  ✏️ Chỉnh Sửa
+                </button>
+              </div>
+
+              <div style={{ color: '#3D3D3D', fontSize: isMobile ? '13px' : '14px', lineHeight: '1.4' }}>
+                {log.note || 'Chưa có ghi chú'}
+              </div>
+
+              {log.images && Object.keys(log.images).length > 0 && (
+                <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {Object.entries(log.images).map(([key, url]) => (
+                    <img
+                      key={key}
+                      src={url}
+                      alt={`Treatment ${key}`}
+                      style={{
+                        width: isMobile ? '60px' : '80px',
+                        height: isMobile ? '60px' : '80px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        border: '1px solid #E8E3D8'
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {staffTreatmentLogs.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#6B7280' }}>
+              Chưa có lịch sử trị liệu nào
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderSalaryTab = () => {
     if (!salaryData || !staffData) {
       return (
@@ -588,7 +665,7 @@ const EmployeeDashboard = ({ user, onLogout }) => {
 
   const tabContainerStyle = {
     display: 'grid',
-    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, minmax(0, 1fr))',
     gap: isMobile ? '8px' : '10px',
     marginBottom: isMobile ? '16px' : '20px'
   };
@@ -825,12 +902,14 @@ const EmployeeDashboard = ({ user, onLogout }) => {
 
       <div style={tabContainerStyle}>
         <button onClick={() => setActiveTab('schedule')} style={activeTab === 'schedule' ? tabActive : tabInactive}>Lịch Hẹn</button>
+        <button onClick={() => setActiveTab('history')} style={activeTab === 'history' ? tabActive : tabInactive}>Lịch Sử Trị Liệu</button>
         <button onClick={() => setActiveTab('salary')} style={activeTab === 'salary' ? tabActive : tabInactive}>Lương</button>
         <button onClick={() => setActiveTab('chat')} style={activeTab === 'chat' ? tabActive : tabInactive}>Chat</button>
       </div>
 
       <div style={contentAreaStyle}>
         {activeTab === 'schedule' && renderScheduleTab()}
+        {activeTab === 'history' && renderHistoryTab()}
         {activeTab === 'salary' && renderSalaryTab()}
         {activeTab === 'chat' && renderChatTab()}
       </div>
@@ -1119,5 +1198,82 @@ const EmployeeDashboard = ({ user, onLogout }) => {
     </div>
   );
 };
+
+{/* Edit Treatment Modal */}
+{editingTreatment && (
+  <div style={{
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: isMobile ? '16px' : '24px'
+  }}>
+    <div style={{
+      backgroundColor: '#FFFFFF',
+      borderRadius: '12px',
+      padding: isMobile ? '16px' : '24px',
+      maxWidth: isMobile ? '95vw' : '500px',
+      width: '100%',
+      textAlign: 'center'
+    }}>
+      <h3 style={{ margin: '0 0 20px 0', color: '#9CAF88', fontSize: isMobile ? '18px' : '20px' }}>
+        Chỉnh Sửa Nhật Ký Trị Liệu
+      </h3>
+
+      <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+        <label style={{ display: 'block', marginBottom: '8px', color: '#3D3D3D', fontWeight: 'bold' }}>
+          Ghi chú liệu trình:
+        </label>
+        <textarea
+          value={editNote}
+          onChange={(e) => setEditNote(e.target.value)}
+          placeholder="Cập nhật diễn biến liệu trình..."
+          style={{
+            width: '100%',
+            minHeight: '100px',
+            padding: '12px',
+            border: '1px solid #E8E3D8',
+            borderRadius: '8px',
+            fontSize: '14px',
+            resize: 'vertical'
+          }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+        <button
+          onClick={async () => {
+            try {
+              await updateTreatmentLog(editingTreatment.id, { note: editNote });
+              setEditingTreatment(null);
+              setEditNote('');
+              alert('Đã cập nhật nhật ký trị liệu thành công!');
+            } catch (error) {
+              alert('Không thể cập nhật: ' + error.message);
+            }
+          }}
+          style={btnPrimary}
+        >
+          💾 Lưu Thay Đổi
+        </button>
+        <button
+          onClick={() => {
+            setEditingTreatment(null);
+            setEditNote('');
+          }}
+          style={btnSecondary}
+        >
+          Hủy
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
 export default EmployeeDashboard;

@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabaseClient';
 export const useEmployeeDashboard = (user) => {
   const [appointments, setAppointments] = useState([]);
   const [treatmentLogs, setTreatmentLogs] = useState([]);
+  const [staffTreatmentLogs, setStaffTreatmentLogs] = useState([]);
   const [staffData, setStaffData] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,21 +53,31 @@ export const useEmployeeDashboard = (user) => {
     }
   };
 
-  // Fetch treatment logs for customers
-  const fetchTreatmentLogs = async (customerIds) => {
-    if (!customerIds || customerIds.length === 0) return [];
+  // Fetch treatment logs for staff
+  const fetchStaffTreatmentLogs = async () => {
+    if (!user?.name) return [];
 
     try {
       const { data, error } = await supabase
         .from('customer_treatment_logs')
-        .select('*')
-        .in('customer_id', customerIds)
+        .select(`
+          *,
+          customers!inner(name)
+        `)
+        .eq('staff', user.name)
         .order('date', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+
+      // Map customer name
+      const logs = data?.map(log => ({
+        ...log,
+        customer_name: log.customers?.name || 'N/A'
+      })) || [];
+
+      return logs;
     } catch (err) {
-      console.error('Error fetching treatment logs:', err);
+      console.error('Error fetching staff treatment logs:', err);
       return [];
     }
   };
@@ -117,6 +128,10 @@ export const useEmployeeDashboard = (user) => {
         const logs = await fetchTreatmentLogs(customerIds);
         setTreatmentLogs(logs);
       }
+
+      // Fetch staff treatment logs
+      const staffLogs = await fetchStaffTreatmentLogs();
+      setStaffTreatmentLogs(staffLogs);
 
       const messages = await fetchChatMessages();
       setChatMessages(messages);
@@ -235,6 +250,28 @@ export const useEmployeeDashboard = (user) => {
     };
   };
 
+  // Update treatment log
+  const updateTreatmentLog = async (logId, updates) => {
+    try {
+      const { data, error } = await supabase
+        .from('customer_treatment_logs')
+        .update(updates)
+        .eq('id', logId);
+
+      if (error) throw error;
+
+      // Update local state
+      setStaffTreatmentLogs(prev => prev.map(log =>
+        log.id === logId ? { ...log, ...updates } : log
+      ));
+
+      return data;
+    } catch (err) {
+      console.error('Error updating treatment log:', err);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     if (user) {
       loadData();
@@ -244,6 +281,7 @@ export const useEmployeeDashboard = (user) => {
   return {
     appointments,
     treatmentLogs,
+    staffTreatmentLogs,
     staffData,
     chatMessages,
     isLoading,
@@ -251,6 +289,7 @@ export const useEmployeeDashboard = (user) => {
     salaryData: calculateSalaryData(),
     updateAppointmentStatus,
     addTreatmentLog,
+    updateTreatmentLog,
     sendChatMessage,
     refreshData: loadData
   };
