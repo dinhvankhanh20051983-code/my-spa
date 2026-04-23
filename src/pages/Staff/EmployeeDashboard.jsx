@@ -1294,3 +1294,5 @@ const EmployeeDashboard = ({ user, onLogout }) => {
     </>
   );
 };
+
+export default EmployeeDashboard;
