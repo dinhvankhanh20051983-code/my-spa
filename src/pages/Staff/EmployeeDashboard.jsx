@@ -1264,15 +1264,18 @@ const EmployeeDashboard = ({ user, onLogout }) => {
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
             <button
-              onClick={async () => {
-                try {
-                  await updateTreatmentLog(editingTreatment.id, { note: editNote });
-                  setEditingTreatment(null);
-                  setEditNote('');
-                  alert('Đã cập nhật nhật ký trị liệu thành công!');
-                } catch (error) {
-                  alert('Không thể cập nhật: ' + error.message);
-                }
+              onClick={() => {
+                const handleUpdate = async () => {
+                  try {
+                    await updateTreatmentLog(editingTreatment.id, { note: editNote });
+                    setEditingTreatment(null);
+                    setEditNote('');
+                    alert('Đã cập nhật nhật ký trị liệu thành công!');
+                  } catch (error) {
+                    alert('Không thể cập nhật: ' + error.message);
+                  }
+                };
+                handleUpdate();
               }}
               style={btnPrimary}
             >
