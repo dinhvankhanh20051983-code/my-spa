@@ -58,24 +58,34 @@ export const useEmployeeDashboard = (user) => {
     if (!user?.name) return [];
 
     try {
-      const { data, error } = await supabase
+      // First get treatment logs
+      const { data: logs, error: logsError } = await supabase
         .from('customer_treatment_logs')
-        .select(`
-          *,
-          customers!inner(name)
-        `)
+        .select('*')
         .eq('staff', user.name)
         .order('date', { ascending: false });
 
-      if (error) throw error;
+      if (logsError) throw logsError;
 
-      // Map customer name
-      const logs = data?.map(log => ({
+      if (!logs || logs.length === 0) return [];
+
+      // Get customer names
+      const customerIds = [...new Set(logs.map(log => log.customer_id).filter(id => id))];
+      const { data: customers } = await supabase
+        .from('customers')
+        .select('id, name')
+        .in('id', customerIds);
+
+      const customerMap = {};
+      customers?.forEach(c => customerMap[c.id] = c.name);
+
+      // Map customer names
+      const logsWithNames = logs.map(log => ({
         ...log,
-        customer_name: log.customers?.name || 'N/A'
-      })) || [];
+        customer_name: customerMap[log.customer_id] || 'N/A'
+      }));
 
-      return logs;
+      return logsWithNames;
     } catch (err) {
       console.error('Error fetching staff treatment logs:', err);
       return [];
