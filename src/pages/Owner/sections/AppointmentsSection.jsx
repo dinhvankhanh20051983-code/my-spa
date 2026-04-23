@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 export const AppointmentsSection = ({
   appointments,
@@ -13,6 +13,32 @@ export const AppointmentsSection = ({
   onSetSelectedLog,
   onSetActiveTab
 }) => {
+  // Sắp xếp lịch hẹn theo ngày/giờ (soonest first)
+  const sortedAppointments = useMemo(() => {
+    return [...appointments].sort((a, b) => {
+      const parseTime = (date, time) => {
+        if (!date || !time) return new Date(0);
+        try {
+          // Thử parse từ DD/MM/YYYY hoặc YYYY-MM-DD format
+          let dateObj;
+          if (date.includes('-')) {
+            dateObj = new Date(date); // YYYY-MM-DD
+          } else if (date.includes('/')) {
+            const [day, month, year] = date.split('/').map(Number);
+            dateObj = new Date(year, month - 1, day);
+          } else {
+            return new Date(0);
+          }
+          const [hour, minute] = time.split(':').map(Number);
+          dateObj.setHours(hour, minute, 0);
+          return dateObj;
+        } catch {
+          return new Date(0);
+        }
+      };
+      return parseTime(a.date, a.time) - parseTime(b.date, b.time);
+    });
+  }, [appointments]);
   return (
     <div style={styles.section}>
       <div style={styles.flexHeader}>
@@ -31,15 +57,16 @@ export const AppointmentsSection = ({
               <th style={styles.thStyle}>KTV</th>
               <th style={styles.thStyle}>Thời Gian</th>
               <th style={styles.thStyle}>Trạng Thái</th>
+              <th style={styles.thStyle}>Xác Nhận</th>
               <th style={styles.thStyle}>Thao Tác</th>
             </tr>
           </thead>
           <tbody>
-            {appointments.map((a) => (
+            {sortedAppointments.map((a) => (
               <tr key={a.id} style={styles.trHoverStyle}>
                 <td style={styles.tdStyle}>
-                  <div style={{ fontWeight: 'bold' }}>{a.customerName}</div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{a.phone || 'Chưa có'}</div>
+                  <div style={{ fontWeight: 'bold' }}>{a.customerName || a.customer_name}</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{a.customerPhone || a.customer_phone || 'Chưa có'}</div>
                 </td>
                 <td style={styles.tdStyle}>{a.service}</td>
                 <td style={styles.tdStyle}>
@@ -62,8 +89,26 @@ export const AppointmentsSection = ({
                   </select>
                 </td>
                 <td style={styles.tdStyle}>
+                  <span style={{
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    backgroundColor: (a.isApproved || a.is_approved) ? '#10b98166' : '#fbbf2466',
+                    color: (a.isApproved || a.is_approved) ? '#10b981' : '#fbbf24'
+                  }}>
+                    {(a.isApproved || a.is_approved) ? '✅ Đã xác nhận' : '⏳ Chờ xác nhận'}
+                  </span>
+                </td>
+                <td style={styles.tdStyle}>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <button style={styles.btnSmall} onClick={() => handlers.handleRemind(a)}>🔔</button>
+                    <button 
+                      style={styles.btnSmall} 
+                      onClick={() => handlers.handleApproveAppointment(a.id)}
+                      disabled={a.isApproved || a.is_approved}
+                    >
+                      {a.isApproved || a.is_approved ? '✅' : '⏳'}
+                    </button>
                     <button style={styles.btnSmall} onClick={() => handlers.handleComplete(a)}>✅</button>
                     <button style={styles.btnSmall} onClick={() => handlers.handleCancel(a.id)}>❌</button>
                   </div>

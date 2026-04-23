@@ -1,18 +1,33 @@
-/* 1. Thiết lập biến màu chủ đạo (Theme Variables) */
+/* 1. Thiết lập biến màu chủ đạo (Theme Variables) - Healing & Friendly */
 :root {
-  /* Màu nền và bề mặt */
-  --bg-dark: #0f172a;        /* Xanh đen sâu (Deep Navy) */
-  --bg-card: rgba(30, 41, 59, 0.7); /* Xanh đen nhạt cho thẻ, có độ trong suốt */
-  --glass-border: rgba(255, 255, 255, 0.08);
+  /* Màu nền chính (60%) - Cream/Be ấm áp */
+  --bg-main: #FAF7F2;        /* Cream sáng, ấm áp */
+  --bg-secondary: #F5F0E8;   /* Cream nhạt hơn */
+  --bg-card: #FFFFFF;        /* Trắng sạch cho cards */
+  --bg-surface: #FDF9F5;     /* Surface rất nhạt */
   
-  /* Màu chủ đạo thương hiệu */
-  --primary: #a78bfa;        /* Tím Lavender sáng cho Khách */
-  --secondary: #10b981;      /* Xanh Emerald cho Nhân viên */
-  --accent: #f472b6;         /* Hồng Pink cho Ưu đãi */
+  /* Borders - Kính mờ nhẹ */
+  --glass-border: rgba(154, 175, 136, 0.15); /* Sage trong suốt */
+  --border-light: #E8E3D8;   /* Đường viền nhẹ */
+  
+  /* Màu chủ đạo thương hiệu (30% phụ) - Xanh dương + Sage */
+  --primary: #9CAF88;        /* Sage xanh lá - Màu chính */
+  --primary-light: #B8C9A3;  /* Sage nhạt hơn */
+  --secondary: #A8D8EA;      /* Xanh dương nhạt - Nhân viên */
+  --secondary-light: #C5E6F5;/* Xanh dương rất nhạt */
+  --accent: #D4A574;         /* Vàng nâu ấm áp - Ưu đãi (10%) */
   
   /* Màu văn bản */
-  --text-main: #f8fafc;      /* Trắng mờ dễ đọc */
-  --text-dim: rgba(148, 163, 184, 0.8); /* Xám xanh cho phụ đề */
+  --text-main: #3D3D3D;      /* Xám đen dễ đọc */
+  --text-secondary: #6B7280; /* Xám trung bình */
+  --text-dim: #9CA3AF;       /* Xám nhạt cho phụ đề */
+  --text-light: #FFFFFF;     /* Trắng cho text trên nền tối */
+  
+  /* Status colors */
+  --success: #6CB588;        /* Xanh mạnh cho thành công */
+  --warning: #D4A574;        /* Vàng nâu cho cảnh báo */
+  --danger: #C97070;         /* Đỏ mềm cho nguy hiểm */
+  --info: #7AAFBE;           /* Xanh dương đậm cho thông tin */
 }
 
 /* 2. Reset & Base Styles */
@@ -21,13 +36,19 @@
   -webkit-tap-highlight-color: transparent; /* Tắt highlight khi chạm trên mobile */
 }
 
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   margin: 0;
   padding: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: var(--bg-dark); /* Sử dụng nền tối */
+  background-color: var(--bg-main);
   color: var(--text-main);
-  line-height: 1.5;
+  line-height: 1.6;
   overflow-x: hidden;
 }
 
@@ -35,7 +56,7 @@ body {
 .app-container {
   min-height: 100vh;
   display: flex;
-  flex-direction: column; /* ĐÃ SỬA LỖI: Thay thế flex-col bằng cú pháp CSS chuẩn */
+  flex-direction: column;
 }
 
 /* Hiệu ứng cho các thẻ Dịch vụ/Vai trò */
@@ -45,59 +66,478 @@ body {
   border-radius: 16px;
   padding: 16px;
   transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .card-item:active {
-  transform: scale(0.98); /* Hiệu ứng nhấn nút */
-  background: rgba(255, 255, 255, 0.05);
+  transform: scale(0.98);
+  background: var(--bg-surface);
 }
 
 .card-item.active {
   border-color: var(--primary);
-  background: rgba(167, 139, 250, 0.1);
-  box-shadow: 0 0 15px rgba(167, 139, 250, 0.2);
+  background: rgba(156, 175, 136, 0.08);
+  box-shadow: 0 0 15px rgba(156, 175, 136, 0.2);
 }
 
 /* Nút bấm chính */
 .btn-primary {
   background: var(--primary);
-  color: white;
+  color: var(--text-light);
   font-weight: 700;
   padding: 14px;
   border-radius: 12px;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3);
+  box-shadow: 0 4px 12px rgba(156, 175, 136, 0.25);
   transition: all 0.2s;
+  font-size: 14px;
 }
 
 .btn-primary:active {
   transform: scale(0.95);
 }
 
-/* Tùy chỉnh input cho nền tối */
-input {
-  background: #1e293b;
-  border: 1px solid var(--glass-border);
-  color: white;
+.btn-primary:hover {
+  background: var(--primary-light);
+}
+
+/* Tùy chỉnh input cho nền sáng */
+input,
+textarea {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
   padding: 12px;
   border-radius: 8px;
   outline: none;
+  font-family: inherit;
+  font-size: 14px;
 }
 
-input:focus {
+input:focus,
+textarea:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(156, 175, 136, 0.15);
 }
 
-/* Thanh điều hướng dưới cùng (Bottom Nav) */
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Select styling */
+select {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  padding: 12px;
+  border-radius: 8px;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(156, 175, 136, 0.15);
+}
+
+/* 4. Responsive Breakpoints & Media Queries */
+/* Mobile: 320px - 767px */
+@media (max-width: 767px) {
+  body {
+    font-size: 14px;
+  }
+
+  .app-container {
+    padding: 0;
+  }
+
+  /* Responsive text */
+  h1 {
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  h3 {
+    font-size: 18px;
+  }
+
+  h4 {
+    font-size: 16px;
+  }
+
+  /* Stack columns on mobile */
+  .grid-2-mobile {
+    display: grid;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .grid-3-mobile {
+    display: grid;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Responsive buttons */
+  .btn-primary,
+  .btn-secondary {
+    padding: 11px 14px !important;
+    font-size: 13px !important;
+    width: 100%;
+  }
+
+  /* Spacing adjustments */
+  .section-spacing {
+    margin-bottom: 16px !important;
+    padding: 16px !important;
+  }
+
+  .card-padding {
+    padding: 12px !important;
+  }
+
+  /* Hide elements on mobile */
+  .hide-mobile {
+    display: none !important;
+  }
+
+  /* Responsive sidebar */
+  .sidebar-responsive {
+    width: 100% !important;
+    padding: 12px !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+  }
+}
+
+/* Tablet: 768px - 1023px */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid-3-tablet {
+    display: grid;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+
+  .grid-4-tablet {
+    display: grid;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+/* Desktop: 1024px and above */
+@media (min-width: 1024px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* 5. Professional Button Styles */
+.btn {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.btn-success {
+  background: #10b981;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #059669;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #94a3b8;
+}
+
+.btn-secondary:hover {
+  background: #334155;
+  color: white;
+}
+
+/* 6. Card & Container Styles */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 18px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.card:hover {
+  border-color: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(156, 175, 136, 0.15);
+}
+
+.card-compact {
+  padding: 12px;
+}
+
+.card-large {
+  padding: 24px;
+}
+
+/* 7. Status Badges */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-success {
+  background: rgba(108, 181, 136, 0.15);
+  color: var(--success);
+  border: 1px solid rgba(108, 181, 136, 0.3);
+}
+
+.badge-warning {
+  background: rgba(212, 165, 116, 0.15);
+  color: var(--warning);
+  border: 1px solid rgba(212, 165, 116, 0.3);
+}
+
+.badge-danger {
+  background: rgba(201, 112, 112, 0.15);
+  color: var(--danger);
+  border: 1px solid rgba(201, 112, 112, 0.3);
+}
+
+.badge-info {
+  background: rgba(122, 175, 190, 0.15);
+  color: var(--info);
+  border: 1px solid rgba(122, 175, 190, 0.3);
+}
+
+/* 8. Thanh điều hướng dưới cùng (Bottom Nav) */
 .nav-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(12px); /* Hiệu ứng kính mờ */
-  border-top: 1px solid var(--glass-border);
+  background: rgba(250, 247, 242, 0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border-light);
+  padding: 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+}
+
+.nav-bar-item {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 10px;
+  background: rgba(250, 247, 242, 0.7);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.nav-bar-item:active {
+  background: rgba(156, 175, 136, 0.15);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* 9. Modal & Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(61, 61, 61, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+  z-index: 1000;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  padding: 24px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 767px) {
+  .modal-content {
+    padding: 20px;
+    max-width: 100%;
+  }
+}
+
+/* 10. Loading & Animation States */
+.skeleton {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 11. Utility Spacing Classes */
+.p-2 {
+  padding: 8px;
+}
+.p-4 {
+  padding: 16px;
+}
+.p-6 {
+  padding: 24px;
+}
+
+.m-2 {
+  margin: 8px;
+}
+.m-4 {
+  margin: 16px;
+}
+.m-6 {
+  margin: 24px;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+.gap-4 {
+  gap: 16px;
+}
+.gap-6 {
+  gap: 24px;
+}
+
+/* 12. Accessibility & Focus States */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 13. Text Utilities */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.text-sm {
+  font-size: 13px;
+}
+
+.text-xs {
+  font-size: 11px;
+}
+
+/* 14. Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
   display: flex;
   justify-content: space-around;
   padding: 10px 0;

@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
+import PaymentModal from '../../components/PaymentModal';
 
-const Store = ({ onLogout }) => {
+const Store = ({ currentCustomer, onLogout }) => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  // Sử dụng currentCustomer từ props, fallback về localStorage
+  const customer = currentCustomer || JSON.parse(localStorage.getItem('spa_customer_info') || 'null');
 
   const products = [
     { id: 1, name: "Serum Vitamin C", price: 550000, label: "550.000đ", points: 5000, img: "🧴" },
@@ -14,53 +20,100 @@ const Store = ({ onLogout }) => {
   ];
 
   const saveOrderToSupabase = async (orderData) => {
-    const { data, error } = await supabase.from('online_orders').insert([orderData]);
+    const { data, error } = await supabase.from('online_orders').insert([orderData]).select();
     if (error) {
       console.error('Supabase lưu đơn hàng thất bại:', error);
       return { error };
     }
     console.log('Supabase lưu đơn hàng thành công:', data);
-    return { data };
+    return { data: data?.[0] ?? null };
   };
 
-  const handleBuy = async (product) => {
+  const handleBuy = (product) => {
+    if (!customer) {
+      setMessage('Vui lòng đăng nhập lại để mua hàng với thông tin người dùng chính xác.');
+      return;
+    }
+
+    // Kiểm tra số điện thoại hợp lệ trước khi mở modal
+    const phoneRegex = /^(\+84|84|0)[3|5|7|8|9][0-9]{8}$/;
+    if (!phoneRegex.test(customer.phone)) {
+      setMessage('Số điện thoại không hợp lệ. Vui lòng cập nhật thông tin cá nhân.');
+      return;
+    }
+
+    setSelectedProduct(product);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentConfirm = async (paymentProof) => {
+    if (!selectedProduct) return;
+
     const order = {
-      customer_name: 'Khách hàng vãng lai',
-      product_name: product.name,
-      price: product.price,
-      reward_points: product.points,
-      status: 'pending',
+      customer_name: customer?.name || 'Khách hàng',
+      customer_phone: customer?.phone || '',
+      order_type: 'product',
+      item_id: selectedProduct.id,
+      item_name: selectedProduct.name,
+      quantity: 1,
+      total_price: selectedProduct.price,
+      reward_points: selectedProduct.points,
+      payment_method: 'bank_transfer',
+      payment_proof: paymentProof,
+      status: 'pending_payment',
+      order_date: new Date().toISOString().split('T')[0],
+      notes: 'Đơn hàng từ cửa hàng - Chờ xác nhận thanh toán',
       created_at: new Date().toISOString()
     };
 
     setIsSubmitting(true);
+    setShowPaymentModal(false);
+
     const localOrders = JSON.parse(localStorage.getItem('spa_customer_orders') || '[]');
     localStorage.setItem('spa_customer_orders', JSON.stringify([...localOrders, order]));
 
     try {
       const { error } = await saveOrderToSupabase(order);
       if (error) {
-        setMessage('Đã lưu đơn hàng cục bộ. Supabase chưa lưu được.');
+        setMessage('Đã lưu đơn hàng cục bộ. Supabase chưa lưu được. Vui lòng liên hệ hỗ trợ.');
       } else {
-        setMessage('Mua hàng thành công. Đơn đã đồng bộ lên Supabase.');
+        setMessage('✅ Đơn hàng đã được tạo! Chúng tôi sẽ xác nhận thanh toán trong vòng 24h.');
       }
     } catch (err) {
       console.error(err);
-      setMessage('Có lỗi khi mua hàng. Vui lòng thử lại.');
+      setMessage('Có lỗi khi tạo đơn hàng. Vui lòng thử lại.');
     } finally {
       setIsSubmitting(false);
+      setSelectedProduct(null);
     }
   };
 
   return (
     <div style={{ padding: '20px', minHeight: '100vh', backgroundColor: '#0f172a', color: 'white' }}>
+      {showPaymentModal && <PaymentModal
+        product={selectedProduct}
+        customerName={customer?.name}
+        customerPhone={customer?.phone}
+        onConfirm={handlePaymentConfirm}
+        onCancel={() => {
+          setShowPaymentModal(false);
+          setSelectedProduct(null);
+        }}
+        isLoading={isSubmitting}
+      />}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
         <button onClick={() => navigate('/customer')} style={btnBack}>← Quay lại</button>
         <button onClick={onLogout} style={btnLogout}>Đăng xuất</button>
       </div>
 
       <h2 style={{ color: '#10b981', marginBottom: '8px' }}>Cửa hàng Spa</h2>
-      <p style={{ color: '#94a3b8', marginBottom: '20px' }}>Mua sản phẩm chất lượng cao, tích điểm và đồng bộ đơn hàng với Supabase.</p>
+      <p style={{ color: '#94a3b8', marginBottom: '8px' }}>Mua sản phẩm chất lượng cao với thanh toán chuyển khoản an toàn. Tích điểm và đồng bộ đơn hàng với Supabase.</p>
+      {customer ? (
+        <p style={{ color: '#94a3b8', marginBottom: '20px' }}>Đơn hàng sẽ được ghi nhận cho: <strong>{customer.name}</strong> • {customer.phone}</p>
+      ) : (
+        <p style={{ color: '#fbbf24', marginBottom: '20px' }}>Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại để đơn hàng đúng chủ.</p>
+      )}
 
       {message && <div style={messageBox}>{message}</div>}
 
@@ -72,7 +125,7 @@ const Store = ({ onLogout }) => {
             <p style={{ color: '#10b981', fontWeight: 'bold', margin: '10px 0 5px' }}>{product.label}</p>
             <p style={{ color: '#fbbf24', fontSize: '12px', marginBottom: '15px' }}>Hoặc đổi {product.points.toLocaleString()} điểm</p>
             <button onClick={() => handleBuy(product)} disabled={isSubmitting} style={btnBuy}>
-              {isSubmitting ? 'Đang xử lý...' : 'Mua ngay'}
+              {isSubmitting ? 'Đang xử lý...' : '💳 Thanh toán'}
             </button>
           </div>
         ))}

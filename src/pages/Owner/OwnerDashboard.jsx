@@ -52,6 +52,48 @@ const OwnerDashboard = () => {
   const [selectedLog, setSelectedLog] = useState(null);
   const [isSupabaseLoading, setIsSupabaseLoading] = useState(true);
 
+  const snakeToCamel = (row) => {
+    // Special mapping for staff fields that are lowercase in DB
+    const reverseMapping = {
+      basesalary: 'baseSalary',
+      servicecomm: 'serviceComm',
+      consultcomm: 'consultComm'
+    };
+    
+    return Object.entries(row || {}).reduce((acc, [key, value]) => {
+      if (reverseMapping[key]) {
+        // Use the mapped camelCase field name
+        acc[reverseMapping[key]] = value;
+      } else {
+        // Convert other snake_case fields to camelCase
+        const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+        acc[camelKey] = value;
+      }
+      return acc;
+    }, {});
+  };
+
+  const camelToSnake = (row) => {
+    // Special mapping for staff fields that are lowercase in DB
+    const fieldMapping = {
+      baseSalary: 'basesalary',
+      serviceComm: 'servicecomm',
+      consultComm: 'consultcomm'
+    };
+    
+    return Object.entries(row || {}).reduce((acc, [key, value]) => {
+      if (fieldMapping[key]) {
+        // Use the mapped lowercase field name
+        acc[fieldMapping[key]] = value;
+      } else {
+        // Convert other fields to snake_case
+        const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+        acc[snakeKey] = value;
+      }
+      return acc;
+    }, {});
+  };
+
   const handleAddTreatmentLog = (customerId, newLog) => {
     setCustomers(prev => prev.map(c =>
       c.id === customerId ? { ...c, history: [...(c.history || []), newLog] } : c
@@ -68,36 +110,49 @@ const OwnerDashboard = () => {
 
   const safeFetchTable = async (table, defaultValue = []) => {
     const { data, error } = await supabase.from(table).select('*').order('id', { ascending: true });
-    return error || !data ? defaultValue : data;
+    if (error) {
+      console.error(`Supabase fetch ${table} failed:`, error);
+    }
+    const mapped = Array.isArray(data) ? data.map(snakeToCamel) : defaultValue;
+    console.log(`Supabase fetch ${table}:`, mapped);
+    return error || !data ? defaultValue : mapped;
   };
 
   const safeFetchSettings = async () => {
-    const { data, error } = await supabase.from('settings').select('*').single();
+    const { data, error } = await supabase.from('settings').select('*').maybeSingle();
+    if (error) {
+      console.error('Supabase fetch settings failed:', error);
+    }
+    console.log('Supabase fetch settings:', data);
     return error || !data ? initialData.settings : data;
   };
 
   const insertRow = async (table, row, setter) => {
-    const { data, error } = await supabase.from(table).insert([row]).select();
+    const snakeRow = camelToSnake(row);
+    const { data, error } = await supabase.from(table).insert([snakeRow]).select();
     if (error) {
       console.error(`Supabase insert ${table} failed:`, error);
       return { error };
     }
-    if (data && data.length > 0) {
-      setter(prev => [...prev, data[0]]);
-      return { data: data[0] };
+    const mapped = Array.isArray(data) ? data.map(snakeToCamel) : data;
+    if (mapped && mapped.length > 0) {
+      setter(prev => [...prev, mapped[0]]);
+      return { data: mapped[0] };
     }
     return { data: row };
   };
 
   const updateRow = async (table, id, updates, setter) => {
-    const { data, error } = await supabase.from(table).update(updates).eq('id', id).select();
+    const snakeUpdates = camelToSnake(updates);
+    const { data, error } = await supabase.from(table).update(snakeUpdates).eq('id', id).select();
     if (error) {
       console.error(`Supabase update ${table} failed:`, error);
       return { error };
     }
-    if (data && data.length > 0) {
-      setter(prev => prev.map(item => item.id === id ? data[0] : item));
-      return { data: data[0] };
+    const mapped = Array.isArray(data) ? data.map(snakeToCamel) : data;
+    if (mapped && mapped.length > 0) {
+      setter(prev => prev.map(item => item.id === id ? mapped[0] : item));
+      return { data: mapped[0] };
     }
     return { data: null };
   };
@@ -109,11 +164,12 @@ const OwnerDashboard = () => {
       return { error };
     }
     if (data && data.length > 0) {
-      setCustomers(prev => prev.map(c => c.id === customerId ? data[0] : c));
+      const mapped = data.map(snakeToCamel);
+      setCustomers(prev => prev.map(c => c.id === customerId ? mapped[0] : c));
       if (selectedCustomer?.id === customerId) {
-        setSelectedCustomer(data[0]);
+        setSelectedCustomer(mapped[0]);
       }
-      return { data: data[0] };
+      return { data: mapped[0] };
     }
     return { data: null };
   };
@@ -183,7 +239,7 @@ const OwnerDashboard = () => {
       const { data, error } = await supabase
         .from('online_orders')
         .select('*')
-        .order('orderDate', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (!error && data) {
         setOnlineOrders(data);
@@ -268,10 +324,10 @@ const OwnerDashboard = () => {
     } else if (modal.type === 'customer') {
       const newCustomer = {
         ...data,
-        referralCode: data.phone,
-        referredBy: data.referredBy || '',
-        referralRewarded: false,
-        myPackages: [],
+        referral_code: data.phone,
+        referred_by: data.referredBy || '',
+        referral_rewarded: false,
+        my_packages: [],
         points: 0,
         stocks: 0,
         history: []
@@ -289,18 +345,25 @@ const OwnerDashboard = () => {
     } else if (modal.type === 'cancel_order') {
       await purchaseHandlers.handleCancelOrder(modal.data.id);
     } else if (modal.type === 'appointment') {
+      if (!data.customerName || !data.customerPhone) {
+        return alert('Vui lòng nhập đầy đủ tên khách hàng và số điện thoại.');
+      }
+      if (data.customerPhone.length < 9) {
+        return alert('Số điện thoại phải có ít nhất 9 chữ số.');
+      }
+      
       const newAppointment = {
-        customerName: data.customerName,
-        customerPhone: data.customerName,
+        customer_name: data.customerName.trim(),
+        customer_phone: data.customerPhone.trim(),
         service: data.service,
         ktv: data.ktv,
         date: data.date,
         time: data.time,
         price: Number(data.price) || 0,
         status: 'Chờ phục vụ',
-        isReminded: false,
-        isApproved: false,
-        sharedUpdate: false,
+        is_reminded: false,
+        is_approved: false,
+        shared_update: false,
         created_at: new Date().toISOString()
       };
       const { error } = await insertRow('appointments', newAppointment, setAppointments);

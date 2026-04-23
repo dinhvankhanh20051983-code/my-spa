@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { fmt } from '../../utils/formatters';
 import { 
@@ -17,7 +17,7 @@ const AppointmentList = ({ filterStatus = 'all', limit = 10 }) => {
   const [error, setError] = useState(null);
 
   // Hàm lấy dữ liệu chính
-  const fetchAppointments = async (isSilent = false) => {
+  const fetchAppointments = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {
       let query = supabase
@@ -45,7 +45,7 @@ const AppointmentList = ({ filterStatus = 'all', limit = 10 }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterStatus, limit]);
 
   useEffect(() => {
     fetchAppointments();
@@ -62,7 +62,7 @@ const AppointmentList = ({ filterStatus = 'all', limit = 10 }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [filterStatus, limit]);
+  }, [filterStatus, limit, fetchAppointments]);
 
   // Cập nhật trạng thái lịch hẹn
   const updateStatus = async (id, newStatus) => {

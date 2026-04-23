@@ -62,7 +62,7 @@ const EmployeePage = ({ user }) => {
   });
 
   // --- MÀN HÌNH CHÍNH (DASHBOARD NHÂN VIÊN) ---
-  const MainView = () => (
+  const MainView = ({ salaryDetail }) => (
     <>
       {/* THẺ THU NHẬP TẠM TÍNH */}
       <div style={styles.salaryCard}>

@@ -19,8 +19,8 @@ export const CustomersSection = ({
     <div style={styles.grid2}>
       {customers.map(c => {
         const lastVisit = c.history && c.history.length > 0 ? c.history[0] : null;
-        const upcoming = appointments.find(a => a.customerName === c.name && a.status !== 'Đã hoàn thành');
-        const totalPackages = c.myPackages.reduce((sum, p) => sum + (p.total - p.used), 0);
+        const upcoming = appointments.find(a => (a.customerName || a.customer_name) === c.name && a.status !== 'Đã hoàn thành');
+        const totalPackages = (c.myPackages || c.my_packages || []).reduce((sum, p) => sum + ((p.total || 0) - (p.used || 0)), 0);
         const totalVisits = c.history ? c.history.length : 0;
 
         return (

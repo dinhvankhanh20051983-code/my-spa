@@ -1,0 +1,63 @@
+name: Preview Deploy to Vercel
+
+on:
+  pull_request:
+    branches:
+      - main
+      - staging
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run lint
+        run: npm run lint
+      - name: Build project
+        run: npm run build
+
+  supabase-preview-tests:
+    needs: build
+    if: secrets.VITE_SUPABASE_URL && secrets.VITE_SUPABASE_ANON_KEY
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Supabase preview tests
+        run: npm run test:supabase
+
+  deploy-preview:
+    needs: supabase-preview-tests
+    if: secrets.VERCEL_TOKEN && secrets.VERCEL_ORG_ID && secrets.VERCEL_PROJECT_ID
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Deploy preview to Vercel
+        uses: amondnet/vercel-action@v42.2.0
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: .
+          github-comment: false

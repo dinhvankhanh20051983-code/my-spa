@@ -23,6 +23,14 @@ export const OwnerDashboardModal = ({ modal, onClose, onSave, styles, data }) =>
               required
             />
 
+            <label style={styles.label}>Số điện thoại:</label>
+            <input
+              name="customerPhone"
+              style={styles.input}
+              placeholder="0xx xxxx xxxx"
+              required
+            />
+
             <label style={styles.label}>Dịch vụ:</label>
             <select name="service" style={styles.input} required>
               <option value="">-- Chọn dịch vụ --</option>

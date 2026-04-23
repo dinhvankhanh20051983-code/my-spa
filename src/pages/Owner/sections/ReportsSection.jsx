@@ -4,7 +4,7 @@ export const ReportsSection = ({ appointments, styles }) => {
   const totalRevenue = appointments.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
   const completedCount = appointments.filter(a => a.status === 'Đã hoàn thành').length;
   const upcomingCount = appointments.filter(a => a.status === 'Chờ phục vụ' || a.status === 'Đang thực hiện').length;
-  const uniqueCustomers = new Set(appointments.map(a => a.customerName)).size;
+  const uniqueCustomers = new Set(appointments.map(a => a.customerName || a.customer_name)).size;
   const averageTicket = appointments.length ? Math.round(totalRevenue / appointments.length) : 0;
   const estimatedProfit = Math.round(totalRevenue * 0.45);
 

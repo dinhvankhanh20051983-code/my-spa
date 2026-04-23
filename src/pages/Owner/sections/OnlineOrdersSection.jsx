@@ -25,18 +25,18 @@ export const OnlineOrdersSection = ({ onlineOrders, styles, onSetModal }) => {
             {onlineOrders.map((order) => (
               <tr key={order.id} style={{ borderBottom: '1px solid #334155' }}>
                 <td style={styles.tdStyle}>
-                  <div style={{ fontWeight: 'bold' }}>{order.customerName}</div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{order.customerPhone}</div>
+                  <div style={{ fontWeight: 'bold' }}>{order.customerName || order.customer_name}</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{order.customerPhone || order.customer_phone}</div>
                 </td>
                 <td style={styles.tdStyle}>
-                  <div>{order.itemName}</div>
+                  <div>{order.itemName || order.item_name}</div>
                   <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                    SL: {order.quantity} • {order.totalPrice.toLocaleString()}đ
+                    SL: {order.quantity} • {(order.totalPrice || order.total_price || 0).toLocaleString()}đ
                   </div>
                 </td>
                 <td style={styles.tdStyle}>
                   <div style={{ fontSize: '12px' }}>
-                    {order.paymentMethod === 'bank_transfer' ? '🏦 Chuyển khoản' : '💳 Thẻ'}
+                    {order.payment_method === 'bank_transfer' ? '🏦 Chuyển khoản' : '💳 Thẻ'}
                   </div>
                 </td>
                 <td style={styles.tdStyle}>

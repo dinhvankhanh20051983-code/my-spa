@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { MapPin, Clock, CheckCircle, Fingerprint, Loader2 } from 'lucide-react';
 
@@ -7,11 +7,7 @@ const Attendance = ({ user }) => {
   const [loading, setLoading] = useState(false);
   const [todayLog, setTodayLog] = useState(null);
 
-  useEffect(() => {
-    fetchTodayStatus();
-  }, [user.id]);
-
-  const fetchTodayStatus = async () => {
+  const fetchTodayStatus = useCallback(async () => {
     const today = new Date().toISOString().split('T')[0];
     const { data } = await supabase
       .from('attendance')
@@ -25,7 +21,11 @@ const Attendance = ({ user }) => {
       if (data.check_out) setStatus('done');
       else if (data.check_in) setStatus('in');
     }
-  };
+  }, [user.id]);
+
+  useEffect(() => {
+    fetchTodayStatus();
+  }, [fetchTodayStatus]);
 
   const handleAttendance = async () => {
     setLoading(true);
@@ -53,7 +53,7 @@ const Attendance = ({ user }) => {
         if (!error) setStatus('done');
       }
       fetchTodayStatus();
-    } catch (err) {
+    } catch {
       alert("Lỗi kết nối. Vui lòng thử lại!");
     } finally {
       setLoading(false);

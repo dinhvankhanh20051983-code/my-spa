@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { fmt } from '../../utils/formatters';
 import { 
@@ -15,11 +15,7 @@ const ShareWallet = ({ user }) => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchWalletData();
-  }, [user.id]);
-
-  const fetchWalletData = async () => {
+  const fetchWalletData = useCallback(async () => {
     setLoading(true);
     // 1. Lấy thông tin cổ phần hiện tại
     const { data: profile } = await supabase
@@ -40,7 +36,11 @@ const ShareWallet = ({ user }) => {
 
     if (trans) setTransactions(trans);
     setLoading(false);
-  };
+  }, [user.id]);
+
+  useEffect(() => {
+    fetchWalletData();
+  }, [fetchWalletData]);
 
   return (
     <div style={{ maxWidth: 500, margin: '0 auto', color: '#fff' }}>

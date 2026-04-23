@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { supabase } from './lib/supabaseClient';
 import OwnerDashboard from './pages/Owner/OwnerDashboard';
 import CustomerDashboard from './pages/Customer/CustomerDashboard';
 import Booking from './pages/Customer/Booking';
@@ -25,17 +26,40 @@ const LoginScreen = ({ onLogin }) => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLoginSubmit = (e) => {
+  const normalizeCustomerRow = (row) => ({
+    id: row.id,
+    name: row.name,
+    phone: row.phone,
+    points: row.points ?? 0,
+    stocks: row.stocks ?? 0,
+    referralCode: row.referral_code || row.referralCode || row.phone,
+    referredBy: row.referred_by || row.referredBy || '',
+    referralRewarded: row.referral_rewarded || row.referralRewarded || false,
+    myPackages: row.my_packages || row.myPackages || [],
+    history: row.history || []
+  });
+
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
+
+    const trimmedPhone = phone.trim();
+    if (trimmedPhone.length < 5) {
+      setError('Vui lòng nhập số điện thoại hợp lệ.');
+      setIsLoading(false);
+      return;
+    }
 
     // Logic Bảo mật: Lấy 5 số cuối của số điện thoại vừa nhập
-    const lastFiveDigits = phone.slice(-5);
+    const lastFiveDigits = trimmedPhone.slice(-5);
 
     // Kiểm tra tính hợp lệ của mật khẩu (Phải khớp với 5 số cuối SĐT)
     if (password !== lastFiveDigits) {
       setError('Mật khẩu phải là 5 số cuối của số điện thoại!');
+      setIsLoading(false);
       return;
     }
 
@@ -44,26 +68,74 @@ const LoginScreen = ({ onLogin }) => {
     let role = '';
 
     // Tìm trong nhóm Owner
-    foundUser = SYSTEM_USERS.owners.find(u => u.phone === phone);
+    foundUser = SYSTEM_USERS.owners.find(u => u.phone === trimmedPhone);
     if (foundUser) role = 'owner';
 
     // Nếu không thấy, tìm trong nhóm Nhân viên
     if (!foundUser) {
-      foundUser = SYSTEM_USERS.staffs.find(u => u.phone === phone);
+      foundUser = SYSTEM_USERS.staffs.find(u => u.phone === trimmedPhone);
       if (foundUser) role = 'staff';
     }
 
-    // Nếu vẫn không thấy, tìm trong nhóm Khách hàng
+    // Nếu không thấy, tìm trong nhóm Khách hàng trên Supabase
     if (!foundUser) {
-      foundUser = SYSTEM_USERS.customers.find(u => u.phone === phone);
-      if (foundUser) role = 'customer';
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('phone', trimmedPhone)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Supabase login error:', error);
+        setError('Không thể kết nối Supabase. Vui lòng thử lại sau.');
+        setIsLoading(false);
+        return;
+      }
+
+      if (data) {
+        foundUser = normalizeCustomerRow(data);
+        role = 'customer';
+      }
     }
 
-    if (foundUser) {
-      onLogin(role, foundUser);
-    } else {
-      setError('Số điện thoại này không tồn tại trên hệ thống!');
+    if (!foundUser) {
+      const fallbackUser = SYSTEM_USERS.customers.find(u => u.phone === phone);
+      if (fallbackUser) {
+        foundUser = fallbackUser;
+        role = 'customer';
+      }
     }
+
+    if (!foundUser) {
+      // Nếu là khách hàng mới, tạo tài khoản đơn giản trên Supabase
+      const { data: newCustomer, error: createError } = await supabase
+        .from('customers')
+        .insert([{
+          name: 'Khách mới',
+          phone: trimmedPhone,
+          points: 0,
+          stocks: 0,
+          referral_code: trimmedPhone,
+          referred_by: '',
+          referral_rewarded: false,
+          my_packages: [],
+          history: []
+        }])
+        .select()
+        .maybeSingle();
+
+      if (createError || !newCustomer) {
+        setError('Số điện thoại chưa được đăng ký và không thể tạo tài khoản mới.');
+        setIsLoading(false);
+        return;
+      }
+
+      foundUser = normalizeCustomerRow(newCustomer);
+      role = 'customer';
+    }
+
+    onLogin(role, foundUser);
+    setIsLoading(false);
   };
 
   return (
@@ -100,7 +172,9 @@ const LoginScreen = ({ onLogin }) => {
 
         {error && <div style={errorBox}>{error}</div>}
 
-        <button type="submit" style={btnSubmit}>XÁC THỰC VÀ ĐĂNG NHẬP</button>
+        <button type="submit" style={btnSubmit} disabled={isLoading}>
+          {isLoading ? 'Đang xác thực...' : 'XÁC THỰC VÀ ĐĂNG NHẬP'}
+        </button>
 
         <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: '#475569' }}>
           Ghi chú: Mật khẩu mặc định là 5 chữ số cuối của số điện thoại bạn đang dùng.
@@ -127,17 +201,25 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0f172a' }}>
       {user.role === 'owner' && (
-        <>
-          <button onClick={handleLogout} style={btnFloatExit}>🔒 ĐĂNG XUẤT AN TOÀN</button>
-          <OwnerDashboard />
-        </>
+        <Routes>
+          <Route path="/*" element={
+            <>
+              <button onClick={handleLogout} style={btnFloatExit}>🔒 ĐĂNG XUẤT AN TOÀN</button>
+              <OwnerDashboard />
+            </>
+          } />
+        </Routes>
       )}
-      {user.role === 'staff' && <EmployeeDashboard user={user} onLogout={handleLogout} />}
+      {user.role === 'staff' && (
+        <Routes>
+          <Route path="/*" element={<EmployeeDashboard user={user} onLogout={handleLogout} />} />
+        </Routes>
+      )}
       {user.role === 'customer' && (
         <Routes>
-          <Route path="/customer" element={<CustomerDashboard onLogout={handleLogout} />} />
-          <Route path="/customer/booking" element={<Booking onLogout={handleLogout} />} />
-          <Route path="/customer/store" element={<Store onLogout={handleLogout} />} />
+          <Route path="/customer" element={<CustomerDashboard user={user} onLogout={handleLogout} />} />
+          <Route path="/customer/booking" element={<Booking currentCustomer={user} onLogout={handleLogout} />} />
+          <Route path="/customer/store" element={<Store currentCustomer={user} onLogout={handleLogout} />} />
           <Route path="*" element={<Navigate to="/customer" replace />} />
         </Routes>
       )}
@@ -153,13 +235,6 @@ const labelStyle = { color: '#10b981', fontSize: '11px', fontWeight: 'bold', dis
 const inputStyle = { width: '100%', padding: '15px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '12px', color: 'white', boxSizing: 'border-box', outline: 'none', fontSize: '16px' };
 const btnSubmit = { width: '100%', padding: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' };
 const errorBox = { color: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '10px', borderRadius: '8px', fontSize: '13px', marginBottom: '20px', textAlign: 'center' };
-
-const simpleLayout = { height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f172a', color: 'white' };
-const cardFull = { backgroundColor: '#1e293b', padding: '40px', borderRadius: '30px', textAlign: 'center', width: '380px', border: '1px solid #334155' };
-const subText = { color: '#94a3b8', fontSize: '14px', marginBottom: '30px' };
-const menuGrid = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '30px' };
-const menuItem = { backgroundColor: '#0f172a', padding: '15px', borderRadius: '12px', fontSize: '12px', textAlign: 'center', border: '1px solid #334155' };
-const btnExit = { width: '100%', padding: '12px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' };
 
 const btnFloatExit = {
   position: 'fixed', bottom: '20px', left: '20px', zIndex: 10000,
