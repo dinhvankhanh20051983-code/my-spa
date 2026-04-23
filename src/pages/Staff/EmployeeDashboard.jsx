@@ -351,6 +351,23 @@ const EmployeeDashboard = ({ user, onLogout }) => {
   };
 
   const renderHistoryTab = () => {
+    if (isLoading) {
+      return (
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div>Đang tải lịch sử trị liệu...</div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#C97070' }}>
+          <div>Lỗi tải dữ liệu: {error}</div>
+          <button onClick={refreshData} style={btnPrimary}>Thử lại</button>
+        </div>
+      );
+    }
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '14px' : '18px' }}>
         <div style={notificationBar}>
