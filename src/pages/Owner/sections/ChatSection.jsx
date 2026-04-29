@@ -1,6 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 
+const normalizePhone = (phone) => {
+  if (!phone) return '';
+  const digits = phone.toString().replace(/\D/g, '');
+  if (digits.startsWith('84')) return '0' + digits.slice(2);
+  if (digits.startsWith('0')) return digits;
+  return digits;
+};
+
+const isOwnerSenderValue = (sender) => {
+  if (!sender) return false;
+  const name = sender.toString().trim().toLowerCase();
+  return ['bạn', 'chủ spa', 'spa', 'owner', 'admin', '0909123456'].includes(name) || normalizePhone(sender) === normalizePhone('0909123456');
+};
+
+const getCustomerKeyFromMessage = (msg, filteredList = []) => {
+  if (!msg) return '';
+  const sender = msg.sender?.toString().trim();
+  const target = normalizePhone(msg.target_phone);
+  const senderIsOwner = isOwnerSenderValue(sender);
+
+  if (msg.chat_type === 'customer_owner' || msg.chat_type === 'customer') {
+    if (senderIsOwner) {
+      return target;
+    }
+
+    const fromCustomer = sender;
+    const matchByName = filteredList.find(u => u.name?.toLowerCase().trim() === fromCustomer?.toLowerCase());
+    return matchByName ? normalizePhone(matchByName.phone) : normalizePhone(sender);
+  }
+
+  if (senderIsOwner) {
+    return target;
+  }
+
+  return normalizePhone(msg.target_phone) || normalizePhone(msg.sender);
+};
+
 export const ChatSection = ({
   chatType,
   setChatType,
@@ -8,13 +45,22 @@ export const ChatSection = ({
   setActiveChat,
   chatSearch,
   setChatSearch,
-  filteredList,
+  filteredList = [],
   styles
 }) => {
   const [messageInput, setMessageInput] = useState('');
   const [messages, setMessages] = useState({});
 
+  const activeKey = activeChat?.phone ? normalizePhone(activeChat.phone) : '';
+  const fallbackKey = activeChat?.name?.toLowerCase() || '';
+  const activeMessages = activeChat ? messages[activeKey] || messages[fallbackKey] || [] : [];
+
   const loadChatMessages = async () => {
+    if (!filteredList || filteredList.length === 0) {
+      console.log('Waiting for filteredList to load before chat grouping');
+      return;
+    }
+
     const { data, error } = await supabase
       .from('chat_messages')
       .select('*')
@@ -22,28 +68,64 @@ export const ChatSection = ({
 
     if (!error && data) {
       const grouped = data.reduce((acc, msg) => {
-        const key = msg.target_phone || msg.chat_key || 'general';
+        const key = getCustomerKeyFromMessage(msg, filteredList);
+        if (!key) return acc;
         acc[key] = acc[key] || [];
         acc[key].push(msg);
         return acc;
       }, {});
       setMessages(grouped);
+      console.log('📨 Loaded chat messages:', grouped);
     }
   };
 
   useEffect(() => {
-    loadChatMessages();
+    if (filteredList && filteredList.length > 0) {
+      loadChatMessages();
+    }
+  }, [filteredList]);
+
+  useEffect(() => {
+    // Subscribe to realtime chat messages
+    const chatSubscription = supabase
+      .channel('chat_messages_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_messages' }, (payload) => {
+        console.log('📨 New chat message received:', payload);
+        
+        if (payload.eventType === 'INSERT' && payload.new) {
+          const newMsg = payload.new;
+          const key = getCustomerKeyFromMessage(newMsg, filteredList);
+          if (!key) {
+            console.log('⚠️ Realtime chat message skipped because no conversation key could be determined', newMsg);
+            return;
+          }
+
+          setMessages(prev => ({
+            ...prev,
+            [key]: [...(prev[key] || []), newMsg]
+          }));
+          
+          console.log('✅ Chat message added to UI for conversation:', key);
+        }
+      })
+      .subscribe((status) => {
+        console.log('📡 Chat subscription status:', status);
+      });
+
+    return () => {
+      chatSubscription.unsubscribe();
+    };
   }, []);
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !activeChat) return;
 
     const now = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-    const chatKey = activeChat.phone;
+    const chatKey = normalizePhone(activeChat.phone);
     const newMessage = {
       chat_type: chatType,
       sender: 'Bạn',
-      target_phone: activeChat.phone,
+      target_phone: normalizePhone(activeChat.phone),
       text: messageInput,
       created_at: new Date().toISOString()
     };
@@ -95,7 +177,7 @@ export const ChatSection = ({
         <div style={styles.chatSidebar}>
           <input
             style={{ ...styles.input, padding: '8px', fontSize: '12px', marginBottom: '10px' }}
-            placeholder="🔍 Tìm tên..."
+            placeholder="🔍 Tìm tên hoặc SĐT..."
             value={chatSearch}
             onChange={(e) => setChatSearch(e.target.value)}
           />
@@ -113,6 +195,7 @@ export const ChatSection = ({
                 }}
               >
                 <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{user.name}</div>
+                <div style={{ fontSize: '11px', color: '#94a3b8' }}>📞 {user.phone}</div>
                 <div style={{ fontSize: '11px', color: '#10b981' }}>● Online</div>
               </div>
             ))}
@@ -127,13 +210,18 @@ export const ChatSection = ({
                 Chat với: {activeChat.name}
               </div>
               <div style={styles.chatHistory}>
-                {messages[activeChat.phone] && messages[activeChat.phone].length > 0 ? (
-                  messages[activeChat.phone].map((msg, idx) => {
+                {activeMessages.length > 0 ? (
+                  activeMessages.map((msg, idx) => {
                     const timeLabel = msg.created_at ? new Date(msg.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : msg.time || '';
+                    const senderLabel = msg.sender === 'Bạn'
+                      ? 'Bạn'
+                      : msg.sender === activeChat.phone
+                      ? activeChat.name
+                      : msg.sender;
                     return (
                       <div key={idx} style={msg.sender === 'Bạn' ? styles.msgRight : styles.msgLeft}>
                         <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
-                          <strong>{msg.sender}</strong> {timeLabel && `• ${timeLabel}`}
+                          <strong>{senderLabel}</strong> {timeLabel && '• ' + timeLabel}
                         </div>
                         <div>{msg.text}</div>
                       </div>

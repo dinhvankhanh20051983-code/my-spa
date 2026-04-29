@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const OnlineOrdersSection = ({ onlineOrders, styles, onSetModal }) => {
+export const OnlineOrdersSection = ({ onlineOrders, styles, onSetModal, onDeleteOrder }) => {
   const pendingOrders = onlineOrders.filter(o => o.status === 'pending');
   const confirmedOrders = onlineOrders.filter(o => o.status === 'confirmed');
 
@@ -60,7 +60,21 @@ export const OnlineOrdersSection = ({ onlineOrders, styles, onSetModal }) => {
                       <button style={styles.btnSmall} onClick={() => onSetModal({ show: true, type: 'cancel_order', data: order })}>
                         ❌ Hủy
                       </button>
+                      <button 
+                        style={{ ...styles.btnSmall, backgroundColor: '#dc2626', borderColor: '#991b1b' }} 
+                        onClick={() => onDeleteOrder(order.id)}
+                      >
+                        🗑️ Xóa
+                      </button>
                     </div>
+                  )}
+                  {order.status !== 'pending' && (
+                    <button 
+                      style={{ ...styles.btnSmall, backgroundColor: '#dc2626', borderColor: '#991b1b' }} 
+                      onClick={() => onDeleteOrder(order.id)}
+                    >
+                      🗑️ Xóa
+                    </button>
                   )}
                 </td>
               </tr>

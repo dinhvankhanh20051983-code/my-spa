@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ESignature } from '../../../components/ESignature/ESignature';
 
 export const TreatmentDetailSection = ({
   customer,
@@ -10,6 +11,7 @@ export const TreatmentDetailSection = ({
   onAddTreatmentLog
 }) => {
   const [treatmentNote, setTreatmentNote] = useState(selectedLog?.note || '');
+  const [showSignature, setShowSignature] = useState(null);
 
   const handleAddTreatment = () => {
     if (!treatmentNote.trim()) {
@@ -77,9 +79,30 @@ export const TreatmentDetailSection = ({
                   {selectedLog.images.after && <img src={selectedLog.images.after} alt="Sau" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px' }} />}
                 </div>
               )}
-              <button style={{ ...styles.btnPrimary, marginTop: '20px' }} onClick={() => onSetModal({ show: true, type: 'treatment_images', data: { customer, log: selectedLog } })}>
-                📤 CẬP NHẬT ẢNH
-              </button>
+              
+              {/* Signature status */}
+              <div style={{ marginTop: '20px', padding: '12px', backgroundColor: '#0f172a', borderRadius: '8px' }}>
+                {selectedLog.is_signed ? (
+                  <p style={{ color: '#10B981', fontWeight: 'bold', margin: 0 }}>
+                    ✅ Khách đã ký xác nhận
+                  </p>
+                ) : (
+                  <p style={{ color: '#FBBF24', fontWeight: 'bold', margin: '0 0 10px 0' }}>
+                    ⏳ Chờ khách ký xác nhận
+                  </p>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
+                <button style={{ ...styles.btnPrimary }} onClick={() => onSetModal({ show: true, type: 'treatment_images', data: { customer, log: selectedLog } })}>
+                  📤 CẬP NHẬT ẢNH
+                </button>
+                {!selectedLog.is_signed && (
+                  <button style={{ ...styles.btnPrimary, backgroundColor: '#10B981' }} onClick={() => setShowSignature(selectedLog)}>
+                    ✍️ CHO KÝ ĐIỆN TỬ
+                  </button>
+                )}
+              </div>
             </>
           ) : (
             <div>
@@ -107,6 +130,36 @@ export const TreatmentDetailSection = ({
           )}
         </div>
       </div>
+
+      {/* E-Signature Modal */}
+      {showSignature && (
+        <ESignature
+          customerName={customer.name}
+          onSign={async (signatureData) => {
+            try {
+              // Mark the treatment log as signed
+              if (selectedLog?.id) {
+                // Update the log locally
+                onSetSelectedLog({
+                  ...selectedLog,
+                  is_signed: true,
+                  signature_date: new Date().toLocaleDateString('vi-VN'),
+                  signature_data: signatureData
+                });
+                alert('✅ Khách hàng đã ký xác nhận liệu trình thành công!');
+              } else {
+                alert('⚠️ Không thể lưu chữ ký. Vui lòng thử lại.');
+              }
+            } catch (err) {
+              console.error('Error saving signature:', err);
+              alert('❌ Có lỗi xảy ra khi lưu chữ ký.');
+            } finally {
+              setShowSignature(null);
+            }
+          }}
+          onCancel={() => setShowSignature(null)}
+        />
+      )}
     </div>
   );
 };

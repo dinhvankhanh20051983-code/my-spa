@@ -7,7 +7,10 @@ export const CustomersSection = ({
   onSetModal,
   onSetSelectedCustomer,
   onSetSelectedLog,
-  onSetActiveTab
+  onSetActiveTab,
+  searchQuery,
+  onSearchChange,
+  onDeleteCustomer
 }) => (
   <div style={styles.section}>
     <div style={styles.flexHeader}>
@@ -16,8 +19,35 @@ export const CustomersSection = ({
         + THÊM KHÁCH MỚI
       </button>
     </div>
+    
+    {/* Thanh tìm kiếm */}
+    <div style={{ marginBottom: '20px' }}>
+      <input
+        type="text"
+        placeholder="🔍 Tìm khách hàng theo tên hoặc số điện thoại..."
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+        style={{
+          width: '100%',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          border: '1px solid #334155',
+          backgroundColor: '#1e293b',
+          color: '#e2e8f0',
+          fontSize: '14px',
+          outline: 'none'
+        }}
+      />
+    </div>
+    
     <div style={styles.grid2}>
-      {customers.map(c => {
+      {customers
+        .filter(c => 
+          !searchQuery || 
+          c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          (c.phone && c.phone.includes(searchQuery))
+        )
+        .map(c => {
         const lastVisit = c.history && c.history.length > 0 ? c.history[0] : null;
         const upcoming = appointments.find(a => (a.customerName || a.customer_name) === c.name && a.status !== 'Đã hoàn thành');
         const totalPackages = (c.myPackages || c.my_packages || []).reduce((sum, p) => sum + ((p.total || 0) - (p.used || 0)), 0);
@@ -29,8 +59,29 @@ export const CustomersSection = ({
               <div>
                 <strong>{c.name}</strong>
                 <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{c.phone}</div>
+                { (c.referredBy || c.referred_by) && (
+                  <div style={{ fontSize: '11px', color: '#a5b4fc', marginTop: '4px' }}>
+                    Giới thiệu bởi: {c.referredBy || c.referred_by}
+                  </div>
+                ) }
               </div>
-              <span style={styles.tagCustomer}>Khách VIP</span>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={styles.tagCustomer}>{c.referredBy || c.referred_by ? (c.referralRewarded || c.referral_rewarded ? 'Đã hoàn thành' : 'Chờ mua') : 'Khách VIP'}</span>
+                <button 
+                  onClick={() => onDeleteCustomer(c.id)}
+                  style={{
+                    backgroundColor: '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '4px 8px',
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Xóa
+                </button>
+              </div>
             </div>
 
             <div style={styles.grid2}>

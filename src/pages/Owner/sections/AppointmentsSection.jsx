@@ -86,6 +86,7 @@ export const AppointmentsSection = ({
                     <option value="Đang thực hiện">Đang thực hiện</option>
                     <option value="Đã hoàn thành">Đã hoàn thành</option>
                     <option value="Trễ hẹn">Trễ hẹn</option>
+                    <option value="Đã hủy">Đã hủy</option>
                   </select>
                 </td>
                 <td style={styles.tdStyle}>
